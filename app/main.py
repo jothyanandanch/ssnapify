@@ -7,13 +7,13 @@ from fastapi import Depends, HTTPException, status,Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.schemas import UserCreate, UserOut
-from app.auth.security import hash_password
+from app.auth.security import hash_password,oauth2_scheme
 from jose import JWTError,jwt
 from app.auth.security import hash_password,verify_password,create_access_token,oauth2_scheme
 from app.models.schemas import UserLogin,Token
 from app.auth.google_oauth import oauth
 from starlette.middleware.sessions import SessionMiddleware
-
+from pydantic import BaseModel,conint
 
 Base.metadata.create_all(bind=engine)
 app=FastAPI()
@@ -71,8 +71,8 @@ async def auth_google_callback(request:Request,db:Session=Depends(get_db)):
     }
 
 
-
 #--------------------------------------------------------
+
 
 
 @app.post('/users',response_model=UserOut, status_code=201)
@@ -95,7 +95,89 @@ def create_user(userdata:UserCreate,db:Session=Depends(get_db)):
     db.refresh(new_user)
     return new_user
 
+
+def get_current_user(db:Session=Depends(get_db),token:str=Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
+        user_id = payload.get("sub")
+        if not user_id:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+    
+    user = db.query(User).filter(User.id == int(user_id)).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User inactive")
+    return user
+
+def require_admin(current_user:User=Depends(get_current_user)):
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403,detail="Admin Access Required")
+    return current_user
+
+
+
+
 @app.get('/users',response_model=list[UserOut])
-def list_users(db:Session=Depends(get_db)):
+def list_users(db:Session=Depends(get_db),current_admin:User=Depends(require_admin)):
     users=db.query(User).order_by(User.id.asc()).all()
     return [UserOut.model_validate(user) for user in users]
+
+
+
+
+
+@app.get('/me',response_model=UserOut)
+def read_me(current_user:User=Depends(get_current_user)):
+    return current_user
+
+
+
+#-----------------------------------ADMIN------------------------
+
+
+@app.post("/admin/users/{user_id}/role")
+
+#can set or remove admin role for any user
+def set_admin_role(user_id:int,make_admin:bool,current_admin:User=Depends(require_admin),db:Session=Depends(get_db)):
+    user=db.query(User).filter(User.id==user_id).first()
+    if not user:
+        raise HTTPException(status_code=404,detail="User Not Found")
+    user.is_admin=bool(make_admin)
+    db.commit()
+    db.refresh()
+    return {"message":"Role Updated","user_id":user.id,"is_admin":user.is_admin}
+
+@app.post("/admin/users/{user_id}/role")
+def set_user_status(user_id:int,is_active:bool,current_admin:User=Depends(require_admin),db:Session=Depends(get_db)):
+    user=db.query(User).filter(User.id==user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    user.is_active = bool(is_active)
+    db.commit(); db.refresh(user)
+    return {"message": "Status updated",
+            "user_id": user.id,
+            "is_active": user.is_active}
+
+
+
+
+@app.post("/admin/users/{user_id}/credits")
+def set_user_credits(user_id: int, credits: int, current_admin: User = Depends(require_admin), db: Session = Depends(get_db)):
+    if credits < 0: raise HTTPException(status_code=400, detail="Credits cannot be negative")
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user: raise HTTPException(status_code=404, detail="User not found")
+    user.credit_balance = int(credits)
+    db.commit(); db.refresh(user)
+    return {"message": "Credits updated", "user_id": user.id, "credit_balance": user.credit_balance}
+
+
+def ensure_credits_or_admin(current_user: User, db: Session, cost: int):
+    if current_user.is_admin:
+        return  # Free usage
+    if current_user.credit_balance < cost:
+        raise HTTPException(status_code=402, detail="Not enough credits")
+    current_user.credit_balance -= cost
+    db.commit()
