@@ -1,0 +1,25 @@
+# Web framework
+fastapi==0.104.1          # Modern, fast web framework for APIs
+uvicorn[standard]==0.24.0 # ASGI server to run FastAPI
+
+# Database
+sqlalchemy==2.0.23        # Database ORM (Object Relational Mapping)
+psycopg2-binary==2.9.9    # PostgreSQL database adapter
+alembic==1.12.1           # Database migration tool
+
+# Authentication & Security
+python-jose[cryptography]==3.3.0  # JWT token handling
+passlib[bcrypt]==1.7.4    # Password hashing
+python-multipart==0.0.6   # File upload support
+
+# Environment & Configuration
+pydantic==2.5.0           # Data validation and settings
+pydantic-settings==2.0.3  # Environment variable handling
+python-dotenv==1.0.0      # .env file loading
+
+# Image Processing
+cloudinary==1.36.0        # Cloudinary SDK for AI features
+
+# HTTP requests (for external APIs)
+httpx==0.25.2             # Async HTTP client
+
