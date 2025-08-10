@@ -3,15 +3,16 @@ from fastapi import FastAPI
 from app.config import settings
 from app.database import Base,engine
 from app.models.user import User
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status,Request
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.schemas import UserCreate, UserOut
 from app.auth.security import hash_password
-from fastapi.security import OAuth2PasswordRequestForm
 from jose import JWTError,jwt
 from app.auth.security import hash_password,verify_password,create_access_token,oauth2_scheme
 from app.models.schemas import UserLogin,Token
+from app.auth.google_oauth import oauth
+from starlette.middleware.sessions import SessionMiddleware
 
 
 Base.metadata.create_all(bind=engine)
@@ -20,8 +21,58 @@ app=FastAPI()
 
 #---------------------------LOGIN-----------------------
 
-@app.post('/login',response_model=Token,status_code=201)
 
+@app.get('/auth/google/login')
+async def google_login(request: Request):
+    redirect_url=request.url_for("auth_google_callback")
+    return await oauth.google.authorize_redirect(request,redirect_url)
+
+
+@app.get("/auth/google/callback")
+async def auth_google_callback(request:Request,db:Session=Depends(get_db)):
+    token=await oauth.google.authorize_access_token(request)
+
+    userinfo=token.get("userinfo")
+    if userinfo is None:
+        raise HTTPException(status_code=400,detail="Failed to retrive user info from Google")
+    
+    email=userinfo.get('email')
+    username=userinfo.get("name") or email.split('@')[0]
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        # Create a new user without password since Google login
+        user = User(
+            email=email,
+            username=username,
+            hashed_password="google_oauth_no_password",  # placeholder
+            credit_balance=10,
+            is_active=True,
+            is_admin=False,
+        )
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    # Create your own JWT token for the app
+    access_token = create_access_token(data={"sub": str(user.id)})
+
+    # Return token and user info as JSON (or redirect to frontend with token)
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "username": user.username,
+            "credit_balance": user.credit_balance,
+            "is_active": user.is_active,
+            "is_admin": user.is_admin,
+        },
+    }
+
+
+
+#--------------------------------------------------------
 
 
 @app.post('/users',response_model=UserOut, status_code=201)

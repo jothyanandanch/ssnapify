@@ -19,5 +19,10 @@ class Settings(BaseSettings):
     algorithm:str='HS256'
     access_token_expire_minutes:int=60
 
+    #Google Authentication
+    google_client_id:str
+    google_client_secret:str
+    google_redirect_url:str
+
 
 settings=Settings()
