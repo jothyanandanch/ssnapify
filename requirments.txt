@@ -23,3 +23,6 @@ cloudinary==1.36.0        # Cloudinary SDK for AI features
 # HTTP requests (for external APIs)
 httpx==0.25.2             # Async HTTP client
 
+itsdangerous
+pydantic_settings
+APScheduler>=3.10,<4.0
