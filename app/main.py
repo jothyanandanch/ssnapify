@@ -184,7 +184,11 @@ async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
     url = f"{FRONTEND_AFTER_LOGIN}?token={access_token}"
     return RedirectResponse(url)
 
-
+@auth_router.post("/logout",status_code=200)
+def logout_notice():
+    {
+        "ok": True,
+        "message": "Logged out. Please clear client token."}
 # =============================================================================
 # USER MANAGEMENT ROUTES
 # =============================================================================
