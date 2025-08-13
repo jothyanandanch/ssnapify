@@ -1,0 +1,2 @@
+.filters-bar { margin-bottom: 12px; }
+.empty { border:1px dashed var(--border); border-radius: var(--radius); padding: 24px; text-align:center; color: var(--muted); }

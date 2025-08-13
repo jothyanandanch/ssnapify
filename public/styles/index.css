@@ -1,0 +1,4 @@
+.features { display:grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-top: 24px; }
+.feature { background: var(--bg-soft); border:1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.feature h3 { margin: 6px 0 4px; }
+.feature p { color: var(--text-soft); margin: 0; }

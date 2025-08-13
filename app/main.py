@@ -1,34 +1,41 @@
 from contextlib import asynccontextmanager
 from typing import List, Optional
-
-from fastapi import FastAPI, Depends, HTTPException, status, Request, Query, UploadFile, File
+from datetime import datetime, timezone
+from app.services import cloudinary_service
+from fastapi import FastAPI, Depends, HTTPException, status, Request, Query, UploadFile, File,Response
 from fastapi.routing import APIRouter
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import RedirectResponse
+from starlette.middleware.sessions import SessionMiddleware
+
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
-from starlette.middleware.sessions import SessionMiddleware
 from pydantic import BaseModel, Field
-from datetime import datetime, timezone
 
+import cloudinary.uploader
+import cloudinary.api
+
+# Local imports
 from app.config import settings
 from app.database import Base, engine, get_db
 from app.models.user import User
 from app.models.image import Image
 from app.models.schemas import UserCreate, UserOut, ImageOut
-from app.auth.security import (
-    hash_password,
-    verify_password,
-    create_access_token,
-    oauth2_scheme,
-)
+from app.auth.security import hash_password, create_access_token, oauth2_scheme
 from app.auth.google_oauth import oauth
 from app.billing.scheduler import start_scheduler
 from app.billing.enforce import ensure_credits_or_admin
 
-import cloudinary.uploader
-import cloudinary.api
+# =============================================================================
+# DATABASE SETUP
+# =============================================================================
 
-# Development convenience: create tables (use Alembic in production)
+# Create DB tables (dev convenience). Use Alembic in production.
 Base.metadata.create_all(bind=engine)
+
+# =============================================================================
+# APP CONFIGURATION
+# =============================================================================
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,7 +49,18 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
 
-# Body models for admin endpoints
+# Serve static frontend from /public -> /static
+app.mount("/static", StaticFiles(directory="public"), name="static")
+
+@app.get("/")
+def root():
+    """Redirect root to frontend landing page"""
+    return RedirectResponse(url="/static/index.html")
+
+# =============================================================================
+# PYDANTIC MODELS
+# =============================================================================
+
 class AdminRoleUpdate(BaseModel):
     make_admin: bool
 
@@ -57,11 +75,20 @@ class AuthResponse(BaseModel):
     token_type: str = "bearer"
     user: UserOut
 
-# Shared dependencies
+class TicketIn(BaseModel):
+    name: str
+    subject: str
+    message: str
+
+# =============================================================================
+# DEPENDENCY FUNCTIONS
+# =============================================================================
+
 def get_current_user(
     db: Session = Depends(get_db),
     token: str = Depends(oauth2_scheme),
 ) -> User:
+    """Get current authenticated user from JWT token"""
     try:
         payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
         user_id = payload.get("sub")
@@ -90,23 +117,41 @@ def get_current_user(
     return user
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Require admin privileges"""
     if not current_user.is_admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Admin access required"
+        )
     return current_user
 
-# Routers
+# =============================================================================
+# ROUTER SETUP
+# =============================================================================
+
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 users_router = APIRouter(prefix="/users", tags=["users"])
 admin_router = APIRouter(prefix="/admin", tags=["admin"])
+support_router = APIRouter(prefix="/support", tags=["support"])
 
-# =========================== AUTH ===========================
+# =============================================================================
+# AUTHENTICATION ROUTES
+# =============================================================================
+
 @auth_router.get("/google/login")
 async def google_login(request: Request):
+    """Initiate Google OAuth login"""
     redirect_url = request.url_for("auth_google_callback")
     return await oauth.google.authorize_redirect(request, redirect_url)
 
-@auth_router.get("/google/callback", name="auth_google_callback", response_model=AuthResponse)
+
+
+
+FRONTEND_AFTER_LOGIN = "http://localhost:8000/static/dashboard.html"
+
+@auth_router.get("/google/callback", name="auth_google_callback")
 async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
+    """Handle Google OAuth callback"""
     token = await oauth.google.authorize_access_token(request)
     userinfo = token.get("userinfo")
     if userinfo is None:
@@ -118,6 +163,7 @@ async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
 
     username = userinfo.get("name") or email.split("@")[0]
 
+    # Find or create user
     user = db.query(User).filter(User.email == email).first()
     if not user:
         user = User(
@@ -134,23 +180,29 @@ async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
 
     access_token = create_access_token(data={"sub": str(user.id)})
 
-    return AuthResponse(
-        access_token=access_token,
-        token_type="bearer",
-        user=UserOut.model_validate(user),
-    )
+    # 🔁 Redirect to frontend with token as query param
+    url = f"{FRONTEND_AFTER_LOGIN}?token={access_token}"
+    return RedirectResponse(url)
 
-# =========================== USERS ===========================
+
+# =============================================================================
+# USER MANAGEMENT ROUTES
+# =============================================================================
+
 @users_router.post("", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def create_user(userdata: UserCreate, db: Session = Depends(get_db)):
+    """Create new user (non-Google registration)"""
+    # Check for existing email
     existing_email = db.query(User).filter(User.email == userdata.email).first()
     if existing_email:
         raise HTTPException(status_code=400, detail="Email already registered")
 
+    # Check for existing username
     existing_username = db.query(User).filter(User.username == userdata.username).first()
     if existing_username:
         raise HTTPException(status_code=400, detail="Username already registered")
 
+    # Create new user
     hashed_password = hash_password(userdata.password)
     new_user = User(
         email=userdata.email,
@@ -169,6 +221,7 @@ def list_users(
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
 ):
+    """List all users (admin only)"""
     users = (
         db.query(User)
         .order_by(User.id.asc())
@@ -180,10 +233,12 @@ def list_users(
 
 @users_router.get("/me", response_model=UserOut)
 def read_me(current_user: User = Depends(get_current_user)):
+    """Get current user profile"""
     return current_user
 
 @app.get("/account/credits")
 def get_credits_info(current_user: User = Depends(get_current_user)):
+    """Get user's credit balance and billing information"""
     # Always compute strictly in UTC
     now = datetime.now(timezone.utc)
 
@@ -214,7 +269,10 @@ def get_credits_info(current_user: User = Depends(get_current_user)):
         "next_reset_time": next_reset_time,
     }
 
-# =========================== ADMIN ===========================
+# =============================================================================
+# ADMIN ROUTES
+# =============================================================================
+
 @admin_router.post("/users/{user_id}/role")
 def set_admin_role(
     user_id: int,
@@ -222,6 +280,7 @@ def set_admin_role(
     db: Session = Depends(get_db),
     current_admin: User = Depends(require_admin),
 ):
+    """Set user admin role"""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -238,6 +297,7 @@ def set_user_status(
     db: Session = Depends(get_db),
     current_admin: User = Depends(require_admin),
 ):
+    """Set user active status"""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -254,6 +314,7 @@ def set_user_credits(
     db: Session = Depends(get_db),
     current_admin: User = Depends(require_admin),
 ):
+    """Set user credit balance"""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -263,12 +324,16 @@ def set_user_credits(
     db.refresh(user)
     return {"message": "Credits updated", "user_id": user.id, "credit_balance": user.credit_balance}
 
-# =========================== CLOUDINARY ===========================
+# =============================================================================
+# IMAGE MANAGEMENT ROUTES
+# =============================================================================
+
 @app.get("/images", response_model=List[ImageOut])
 def list_user_images(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Get user's uploaded images"""
     return (
         db.query(Image)
         .filter(Image.user_id == current_user.id)
@@ -278,12 +343,14 @@ def list_user_images(
 
 @app.post('/images', response_model=ImageOut)
 def upload_image(
-    title: str | None,
+    title: str | None = None,
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Upload new image to Cloudinary"""
     ensure_credits_or_admin(current_user, db, cost=1)
+    
     try:
         upload_response = cloudinary.uploader.upload(file.file, resource_type='image')
     except Exception as e:
@@ -302,17 +369,46 @@ def upload_image(
     db.refresh(img)
     return img
 
+@app.delete("/images/{image_id}", status_code=204)
+def delete_image(
+    image_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Delete image from database and Cloudinary"""
+    img = db.query(Image).filter(Image.id == image_id).first()
+    if not img:
+        raise HTTPException(404, detail="Image not found")
+
+    # Allow if owner OR admin; deny otherwise
+    if img.user_id != current_user.id and not current_user.is_admin:
+        raise HTTPException(403, detail="Not authorized to delete this image")
+
+    try:
+        cloudinary.api.delete_resources([img.public_id], resource_type="image")
+    except Exception as e:
+        raise HTTPException(500, detail=f"Failed to delete image from Cloudinary: {str(e)}")
+
+    db.delete(img)
+    db.commit()
+
+# =============================================================================
+# IMAGE TRANSFORMATION ROUTES
+# =============================================================================
+
 @app.post("/images/{image_id}/restore", response_model=ImageOut)
 def restore_image(
     image_id: int,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Restore damaged/old image using AI"""
     img = db.query(Image).filter(Image.id == image_id, Image.user_id == current_user.id).first()
     if not img:
         raise HTTPException(404, "Image Not Found")
 
     ensure_credits_or_admin(current_user, db, cost=1)
+    
     try:
         restored = cloudinary.uploader.upload(img.secure_url, transformation=[{"effect": "restore"}])
     except Exception as e:
@@ -337,20 +433,22 @@ def remove_background(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Remove background from image"""
     img = db.query(Image).filter(Image.id == image_id, Image.user_id == current_user.id).first()
     if not img:
         raise HTTPException(404, "Image Not Found")
 
     ensure_credits_or_admin(current_user, db, cost=1)
+    
     try:
-        restored = cloudinary.uploader.upload(img.secure_url, transformation=[{"effect": "background_removal"}])
+        processed = cloudinary.uploader.upload(img.secure_url, transformation=[{"effect": "background_removal"}])
     except Exception as e:
         raise HTTPException(500, detail=f"Cloudinary background removal failed: {str(e)}")
 
     new_img = Image(
         user_id=current_user.id,
-        public_id=restored['public_id'],
-        secure_url=restored['secure_url'],
+        public_id=processed['public_id'],
+        secure_url=processed['secure_url'],
         title="Background Removed " + (img.title or ""),
         transformation_type="remove_bg",
         config={"effect": "background_removal"},
@@ -366,20 +464,22 @@ def remove_object(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Remove objects from image"""
     img = db.query(Image).filter(Image.id == image_id, Image.user_id == current_user.id).first()
     if not img:
         raise HTTPException(404, "Image Not Found")
 
     ensure_credits_or_admin(current_user, db, cost=1)
+    
     try:
-        restored = cloudinary.uploader.upload(img.secure_url, transformation=[{"effect": "object_removal"}])
+        processed = cloudinary.uploader.upload(img.secure_url, transformation=[{"effect": "object_removal"}])
     except Exception as e:
         raise HTTPException(500, detail=f"Cloudinary object removal failed: {str(e)}")
 
     new_img = Image(
         user_id=current_user.id,
-        public_id=restored['public_id'],
-        secure_url=restored['secure_url'],
+        public_id=processed['public_id'],
+        secure_url=processed['secure_url'],
         title="Object Removed " + (img.title or ""),
         transformation_type="object_removal",
         config={"effect": "object_removal"},
@@ -396,28 +496,25 @@ def generative_fill(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Fill areas of image using AI generation"""
     img = db.query(Image).filter(Image.id == image_id, Image.user_id == current_user.id).first()
     if not img:
         raise HTTPException(404, "Image Not Found")
 
     ensure_credits_or_admin(current_user, db, cost=3)
+    
     try:
-        restored = cloudinary.uploader.upload(
+        processed = cloudinary.uploader.upload(
             img.secure_url,
-            transformation=[
-                {
-                    "effect": "generative_fill",
-                    "prompt": prompt,
-                }
-            ],
+            transformation=[{"effect": "generative_fill", "prompt": prompt}],
         )
     except Exception as e:
         raise HTTPException(500, detail=f"Cloudinary generative fill failed: {str(e)}")
 
     new_img = Image(
         user_id=current_user.id,
-        public_id=restored['public_id'],
-        secure_url=restored['secure_url'],
+        public_id=processed['public_id'],
+        secure_url=processed['secure_url'],
         title=f"Generative Fill: {prompt} " + (img.title or ""),
         transformation_type="generative_fill",
         config={"effect": "generative_fill", "prompt": prompt},
@@ -433,13 +530,15 @@ def image_enhancer(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Enhance image quality and sharpness"""
     img = db.query(Image).filter(Image.id == image_id, Image.user_id == current_user.id).first()
     if not img:
         raise HTTPException(404, "Image Not Found")
 
     ensure_credits_or_admin(current_user, db, cost=1)
+    
     try:
-        restored = cloudinary.uploader.upload(
+        processed = cloudinary.uploader.upload(
             img.secure_url,
             transformation=[
                 {"quality": "auto"},
@@ -451,8 +550,8 @@ def image_enhancer(
 
     new_img = Image(
         user_id=current_user.id,
-        public_id=restored['public_id'],
-        secure_url=restored['secure_url'],
+        public_id=processed['public_id'],
+        secure_url=processed['secure_url'],
         title="Enhanced Image " + (img.title or ""),
         transformation_type="image_enhancer",
         config=[
@@ -472,28 +571,25 @@ def replace_background(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    """Replace image background with AI-generated content"""
     img = db.query(Image).filter(Image.id == image_id, Image.user_id == current_user.id).first()
     if not img:
         raise HTTPException(404, "Image Not Found")
 
     ensure_credits_or_admin(current_user, db, cost=2)
+    
     try:
-        restored = cloudinary.uploader.upload(
+        processed = cloudinary.uploader.upload(
             img.secure_url,
-            transformation=[
-                {
-                    "effect": "background_replacement",
-                    "background": prompt,
-                }
-            ],
+            transformation=[{"effect": "background_replacement", "background": prompt}],
         )
     except Exception as e:
         raise HTTPException(500, detail=f"Cloudinary background replacement failed: {str(e)}")
 
     new_img = Image(
         user_id=current_user.id,
-        public_id=restored['public_id'],
-        secure_url=restored['secure_url'],
+        public_id=processed['public_id'],
+        secure_url=processed['secure_url'],
         title=f"Background replaced: {prompt} " + (img.title or ""),
         transformation_type="replace_background",
         config={"effect": "background_replacement", "background": prompt},
@@ -503,30 +599,37 @@ def replace_background(
     db.refresh(new_img)
     return new_img
 
-@app.delete("/images/{image_id}", status_code=204)
-def delete_image(
-    image_id: int,
-    current_user: User = Depends(get_current_user),
+# =============================================================================
+# SUPPORT ROUTES
+# =============================================================================
+
+@support_router.post("/ticket", status_code=200)
+def create_ticket(
+    data: TicketIn,
     db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_current_user),
 ):
-    img = db.query(Image).filter(Image.id == image_id).first()
-    if not img:
-        raise HTTPException(404, detail="Image not found")
+    """Create support ticket"""
+    # Compose email content for your mailer (implement send_email separately)
+    user_email = getattr(current_user, "email", None) if current_user else None
+    email_subject = f"Support Ticket: {data.subject}"
+    email_body = f"""
+From: {data.name}
+User Email: {user_email or "anonymous/guest"}
+Subject: {data.subject}
 
-    # Allow if owner OR admin; deny otherwise
-    if img.user_id != current_user.id and not current_user.is_admin:
-        raise HTTPException(403, detail="Not authorized to delete this image")
+Message:
+{data.message}
+""".strip()
+    
+    # TODO: send_email(to="jothyanandan123@gmail.com", subject=email_subject, body=email_body)
+    return {"ok": True}
 
-    try:
-        cloudinary.api.delete_resources([img.public_id], resource_type="image")
-    except Exception as e:
-        raise HTTPException(500, detail=f"Failed to delete image from Cloudinary: {str(e)}")
+# =============================================================================
+# ROUTER REGISTRATION
+# =============================================================================
 
-    db.delete(img)
-    db.commit()
-    return
-
-# Mount routers
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(admin_router)
+app.include_router(support_router)

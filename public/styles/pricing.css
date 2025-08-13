@@ -1,0 +1,4 @@
+.pricing { display:grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.plan { background: var(--bg-soft); border:1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); display:flex; flex-direction:column; gap:10px; }
+.plan .price { font-size: 28px; font-weight: 800; }
+.plan ul { margin: 0; padding-left: 16px; color: var(--text-soft); }

@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pricing · SS AI IMAGE ENHANCE SERVICES</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="styles/base.css" rel="stylesheet">
+  <link href="styles/layout.css" rel="stylesheet">
+  <link href="styles/components.css" rel="stylesheet">
+  <link href="styles/theme.css" rel="stylesheet">
+  <link href="styles/pricing.css" rel="stylesheet">
+</head>
+<body>
+<header class="header">
+  <div class="nav">
+    <div class="brand">
+      <img src="assets/logo.png" alt="logo">
+      <span>SS AI IMAGE ENHANCE SERVICES</span>
+    </div>
+    <nav class="navlinks">
+      <a href="/static/index.html">Home</a>
+      <a href="/static/dashboard.html">Dashboard</a>
+      <a href="/static/gallery.html">Gallery</a>
+      <a href="/static/upload.html">Upload</a>
+      <a class="active" href="/static/pricing.html">Pricing</a>
+      <a href="/static/support.html">Support</a>
+      <button id="theme-toggle" class="theme-toggle" type="button">Theme</button>
+      <button id="logout" class="btn ghost" type="button">Logout</button>
+    </nav>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container">
+    <h2>Pricing</h2>
+    <p class="small">Payments coming soon (Cashfree). Plans shown for reference.</p>
+
+    <div class="pricing">
+      <div class="plan">
+        <h3>Free</h3>
+        <div class="price">$0</div>
+        <ul>
+          <li>10 credits / month</li>
+          <li>Basic AI operations</li>
+          <li>Community support</li>
+        </ul>
+        <button class="btn ghost" disabled>Current</button>
+      </div>
+
+      <div class="plan">
+        <h3>Pro (1 Month)</h3>
+        <div class="price">$—</div>
+        <ul>
+          <li>50 credits / month</li>
+          <li>Faster processing</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="btn" disabled>Coming Soon</button>
+      </div>
+
+      <div class="plan">
+        <h3>Pro (6 Months)</h3>
+        <div class="price">$—</div>
+        <ul>
+          <li>100 credits / month</li>
+          <li>Faster processing</li>
+          <li>Priority support</li>
+        </ul>
+        <button class="btn" disabled>Coming Soon</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <span>© SS AI IMAGE ENHANCE SERVICES</span>
+    <span class="small">Billing cycles & resets shown in Dashboard</span>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  (async () => { await ensureLoggedIn(); attachLogout(); })();
+</script>
+</body>
+</html>

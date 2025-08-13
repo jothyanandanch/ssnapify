@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Login · SS AI IMAGE ENHANCE SERVICES</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="styles/base.css" rel="stylesheet">
+  <link href="styles/layout.css" rel="stylesheet">
+  <link href="styles/components.css" rel="stylesheet">
+  <link href="styles/theme.css" rel="stylesheet">
+</head>
+<body>
+<header class="header">
+  <div class="nav">
+    <div class="brand">
+      <img src="assets/logo.png" alt="logo">
+      <span>SS AI IMAGE ENHANCE SERVICES</span>
+    </div>
+    <nav class="navlinks">
+      <a href="/static/index.html">Home</a>
+      <a href="/static/dashboard.html">Dashboard</a>
+      <a href="/static/gallery.html">Gallery</a>
+      <a href="/static/upload.html">Upload</a>
+      <a href="/static/pricing.html">Pricing</a>
+      <a href="/static/support.html">Support</a>
+      <button id="theme-toggle" class="theme-toggle" type="button">Theme</button>
+    </nav>
+  </div>
+</header>
+
+<section class="section">
+  <div class="container" style="max-width:520px;">
+    <div class="card" style="padding:24px;">
+      <h2>Login</h2>
+      <p class="small">Sign in with Google to continue.</p>
+      <div style="margin-top:16px;">
+        <button id="login-google" class="btn">Continue with Google</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="container">
+    <span>© SS AI IMAGE ENHANCE SERVICES</span>
+    <span class="small">Secure OAuth via Google</span>
+  </div>
+</footer>
+
+<script src="js/config.js"></script>
+<script src="js/theme.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script>
+  attachLogin();
+</script>
+</body>
+</html>
