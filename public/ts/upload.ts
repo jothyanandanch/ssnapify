@@ -1,53 +1,61 @@
-import { api } from './api.js';
-import { CONFIG } from './config.js';
+import { api, APIError } from './api.js';
+import { CONFIG, TOOL_CONFIG, ImageTool } from './config.js';
 import { showToast, formatFileSize, createProgressBar } from './utils.js';
 import { ensureLoggedIn } from './auth.js';
-function toAllowedExt(ext) {
-    if (!ext)
-        return null;
-    const e = ext.toLowerCase();
-    if (e === 'jpg' || e === 'jpeg' || e === 'png' || e === 'webp' || e === 'gif')
-        return e;
-    return null;
+type AllowedExt = 'jpg' | 'jpeg' | 'png' | 'webp' | 'gif';
+
+function toAllowedExt(ext: string | undefined): AllowedExt | null {
+if (!ext) return null;
+const e = ext.toLowerCase();
+if (e === 'jpg' || e === 'jpeg' || e === 'png' || e === 'webp' || e === 'gif') return e;
+return null;
 }
+
+
 class AdvancedUploader {
+    private dropZone!: HTMLElement;
+    private fileInput!: HTMLInputElement;
+    private previewGrid!: HTMLElement;
+    private uploadBtn!: HTMLButtonElement;
+    private files: Map<string, File> = new Map();
+    private selectedTool: ImageTool | null = null;
+
     constructor() {
-        this.files = new Map();
-        this.selectedTool = null;
         this.initElements();
         this.setupEvents();
     }
-    initElements() {
-        this.dropZone = document.getElementById('dropZone');
-        this.fileInput = document.getElementById('fileInput');
-        this.previewGrid = document.getElementById('filePreviewGrid');
-        this.uploadBtn = document.getElementById('uploadBtn');
+
+    private initElements(): void {
+        this.dropZone = document.getElementById('dropZone')!;
+        this.fileInput = document.getElementById('fileInput') as HTMLInputElement;
+        this.previewGrid = document.getElementById('filePreviewGrid')!;
+        this.uploadBtn = document.getElementById('uploadBtn') as HTMLButtonElement;
     }
-    setupEvents() {
+
+    private setupEvents(): void {
         this.dropZone.addEventListener('dragover', e => { e.preventDefault(); this.dropZone.classList.add('drag-over'); });
         this.dropZone.addEventListener('dragleave', e => { e.preventDefault(); this.dropZone.classList.remove('drag-over'); });
         this.dropZone.addEventListener('drop', e => {
-            var _a;
             e.preventDefault();
             this.dropZone.classList.remove('drag-over');
-            this.handleFiles(Array.from(((_a = e.dataTransfer) === null || _a === void 0 ? void 0 : _a.files) || []));
+            this.handleFiles(Array.from(e.dataTransfer?.files || []));
         });
         this.fileInput.addEventListener('change', e => {
-            const f = e.target.files;
-            if (f)
-                this.handleFiles(Array.from(f));
+            const f = (e.target as HTMLInputElement).files;
+            if (f) this.handleFiles(Array.from(f));
         });
         this.uploadBtn.addEventListener('click', () => this.uploadAll());
     }
-    handleFiles(files) {
+
+    private handleFiles(files: File[]): void {
         for (const file of files) {
-            if (!this.validateFile(file))
-                continue;
+            if (!this.validateFile(file)) continue;
             this.files.set(file.name, file);
             this.addPreview(file);
         }
     }
-    validateFile(file) {
+
+    private validateFile(file: File): boolean {
         const rawExt = file.name.split('.').pop();
         const ext = toAllowedExt(rawExt);
         if (!ext || !CONFIG.SUPPORTED_FORMATS.includes(ext)) {
@@ -60,7 +68,8 @@ class AdvancedUploader {
         }
         return true;
     }
-    addPreview(file) {
+
+    private addPreview(file: File): void {
         const item = document.createElement('div');
         item.innerHTML = `
             <div>${file.name}</div>
@@ -69,7 +78,8 @@ class AdvancedUploader {
         `;
         this.previewGrid.appendChild(item);
     }
-    async uploadAll() {
+
+    private async uploadAll(): Promise<void> {
         for (const file of this.files.values()) {
             const formData = new FormData();
             formData.append('file', file);
@@ -78,7 +88,8 @@ class AdvancedUploader {
         showToast('Upload complete', 'success');
     }
 }
+
 document.addEventListener('DOMContentLoaded', () => {
     ensureLoggedIn();
-    window.uploader = new AdvancedUploader();
+    (window as any).uploader = new AdvancedUploader();
 });

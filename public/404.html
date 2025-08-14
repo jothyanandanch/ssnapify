@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - SSnapify</title>
+    <!-- Updated CSS References -->
+    <link rel="stylesheet" href="/styles/base.css">
+    <link rel="stylesheet" href="/styles/components.css">
+    <link rel="stylesheet" href="/styles/animation.css">
+    <link rel="icon" href="/assets/favicon.ico">
+    <style>
+        .error-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: var(--spacing-xl);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .error-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: -1;
+        }
+
+        .error-content {
+            max-width: 600px;
+            z-index: 2;
+        }
+
+        .error-code {
+            font-size: clamp(4rem, 10vw, 8rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--spacing-md);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .error-title {
+            font-size: var(--font-size-3xl);
+            margin-bottom: var(--spacing-lg);
+            color: var(--text-primary);
+        }
+
+        .error-description {
+            font-size: var(--font-size-lg);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-2xl);
+            line-height: 1.6;
+        }
+
+        .error-actions {
+            display: flex;
+            gap: var(--spacing-lg);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-suggestions {
+            margin-top: var(--spacing-2xl);
+            padding: var(--spacing-xl);
+            border-radius: var(--radius-xl);
+            max-width: 500px;
+        }
+
+        .nav-suggestions h3 {
+            margin-bottom: var(--spacing-lg);
+            color: var(--text-primary);
+        }
+
+        .suggestion-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-md);
+        }
+
+        .suggestion-link {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-md);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all var(--transition-fast);
+            border: 1px solid var(--border-color);
+        }
+
+        .suggestion-link:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow-color);
+        }
+
+        .suggestion-icon {
+            font-size: 1.5rem;
+        }
+
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .floating-element {
+            position: absolute;
+            opacity: 0.1;
+            font-size: 2rem;
+            animation: floatAround 10s ease-in-out infinite;
+        }
+
+        .floating-element:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+        .floating-element:nth-child(2) { top: 20%; right: 15%; animation-delay: 2s; }
+        .floating-element:nth-child(3) { bottom: 20%; left: 20%; animation-delay: 4s; }
+        .floating-element:nth-child(4) { bottom: 15%; right: 10%; animation-delay: 6s; }
+
+        @keyframes floatAround {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(90deg); }
+            50% { transform: translateY(0px) rotate(180deg); }
+            75% { transform: translateY(20px) rotate(270deg); }
+        }
+
+        @media (max-width: 768px) {
+            .error-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .suggestion-links {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-background">
+            <div class="floating-elements">
+                <div class="floating-element">🔍</div>
+                <div class="floating-element">📸</div>
+                <div class="floating-element">✨</div>
+                <div class="floating-element">🎨</div>
+            </div>
+        </div>
+
+        <div class="error-content animate-fade-in">
+            <div class="error-code">404</div>
+            <h1 class="error-title">Oops! Page Not Found</h1>
+            <p class="error-description">
+                The page you're looking for seems to have vanished into thin air. 
+                Don't worry, even the best AI can't predict every click!
+            </p>
+
+            <div class="error-actions">
+                <a href="index.html" class="btn btn-primary btn-lg">
+                    🏠 Go Home
+                </a>
+                <button onclick="history.back()" class="btn btn-secondary btn-lg">
+                    ← Go Back
+                </button>
+            </div>
+        </div>
+
+        <div class="nav-suggestions glass-effect animate-fade-in-delay">
+            <h3>Looking for something specific?</h3>
+            <div class="suggestion-links">
+                <a href="index.html" class="suggestion-link">
+                    <span class="suggestion-icon">🏠</span>
+                    <span>Homepage</span>
+                </a>
+
+                <a href="upload.html" class="suggestion-link">
+                    <span class="suggestion-icon">📤</span>
+                    <span>Upload Images</span>
+                </a>
+
+                <a href="gallery.html" class="suggestion-link">
+                    <span class="suggestion-icon">🖼️</span>
+                    <span>Image Gallery</span>
+                </a>
+
+                <a href="dashboard.html" class="suggestion-link">
+                    <span class="suggestion-icon">📊</span>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="pricing.html" class="suggestion-link">
+                    <span class="suggestion-icon">💎</span>
+                    <span>Pricing Plans</span>
+                </a>
+
+                <a href="support.html" class="suggestion-link">
+                    <span class="suggestion-icon">🆘</span>
+                    <span>Get Support</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Updated Script References -->
+    <script type="module" src="/js/config.js"></script>
+    <script type="module" src="/js/theme.js"></script>
+    <script type="module" src="/js/utils.js"></script>
+</body>
+</html>

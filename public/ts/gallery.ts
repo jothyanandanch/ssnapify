@@ -1,34 +1,50 @@
-import { api } from './api.js';
-import { TOOL_CONFIG } from './config.js';
+import { api, APIError } from './api.js';
+import { CONFIG, TOOL_CONFIG, ImageTool } from './config.js';
+import { ImageAsset } from './types.js';
 import { showToast, formatDate } from './utils.js';
-import { ensureLoggedIn } from './auth.js';
+import { ensureLoggedIn, isAdmin, getUser } from './auth.js';
+
 class GalleryManager {
+    private images: ImageAsset[] = [];
+    private selectedImages: Set<string> = new Set();
+    private currentFilter: string = 'all';
+
+    private gridContainer!: HTMLElement;
+    private filterButtons!: NodeListOf<HTMLButtonElement>;
+    private selectAllBtn!: HTMLButtonElement;
+    private deleteSelectedBtn!: HTMLButtonElement;
+    private searchInput!: HTMLInputElement;
+    private dateFromInput!: HTMLInputElement;
+    private dateToInput!: HTMLInputElement;
+
     constructor() {
-        this.images = [];
-        this.selectedImages = new Set();
-        this.currentFilter = 'all';
         this.initializeElements();
         this.setupEventListeners();
         this.loadImages();
     }
-    initializeElements() {
-        this.gridContainer = document.getElementById('galleryGrid');
-        this.filterButtons = document.querySelectorAll('.filter-btn');
-        this.selectAllBtn = document.getElementById('selectAll');
-        this.deleteSelectedBtn = document.getElementById('deleteSelected');
-        this.searchInput = document.getElementById('searchInput');
-        this.dateFromInput = document.getElementById('dateFrom');
-        this.dateToInput = document.getElementById('dateTo');
+
+    private initializeElements(): void {
+        this.gridContainer = document.getElementById('galleryGrid')!;
+        this.filterButtons = document.querySelectorAll('.filter-btn') as NodeListOf<HTMLButtonElement>;
+        this.selectAllBtn = document.getElementById('selectAll')! as HTMLButtonElement;
+        this.deleteSelectedBtn = document.getElementById('deleteSelected')! as HTMLButtonElement;
+        this.searchInput = document.getElementById('searchInput')! as HTMLInputElement;
+        this.dateFromInput = document.getElementById('dateFrom')! as HTMLInputElement;
+        this.dateToInput = document.getElementById('dateTo')! as HTMLInputElement;
     }
-    setupEventListeners() {
+
+    private setupEventListeners(): void {
         this.filterButtons.forEach(btn => {
             btn.addEventListener('click', () => this.handleFilterChange(btn));
         });
+
         this.selectAllBtn.addEventListener('click', () => this.toggleSelectAll());
         this.deleteSelectedBtn.addEventListener('click', () => this.deleteSelectedImages());
+
         this.searchInput.addEventListener('input', () => this.applyFilters());
         this.dateFromInput.addEventListener('change', () => this.applyFilters());
         this.dateToInput.addEventListener('change', () => this.applyFilters());
+
         document.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 'a') {
                 e.preventDefault();
@@ -39,23 +55,23 @@ class GalleryManager {
             }
         });
     }
-    async loadImages() {
+
+    private async loadImages(): Promise<void> {
         try {
-            const params = {};
-            if (this.dateFromInput.value)
-                params.from = this.dateFromInput.value;
-            if (this.dateToInput.value)
-                params.to = this.dateToInput.value;
+            const params: Record<string, string> = {};
+            if (this.dateFromInput.value) params.from = this.dateFromInput.value;
+            if (this.dateToInput.value) params.to = this.dateToInput.value;
+
             this.images = await api.get('/images', params);
             this.renderImages();
             this.updateStats();
-        }
-        catch (error) {
+        } catch (error) {
             console.error('Failed to load images:', error);
             showToast('Failed to load images', 'error');
         }
     }
-    renderImages() {
+
+    private renderImages(): void {
         if (this.images.length === 0) {
             this.gridContainer.innerHTML = `
                 <div class="empty">
@@ -65,6 +81,7 @@ class GalleryManager {
             `;
             return;
         }
+
         const filteredImages = this.getFilteredImages();
         this.gridContainer.innerHTML = filteredImages.map(image => `
             <div class="image-card" data-image-id="${image.id}">
@@ -78,120 +95,122 @@ class GalleryManager {
                 </div>
             </div>
         `).join('');
+
         const imageCards = this.gridContainer.querySelectorAll('.image-card');
         imageCards.forEach((card, index) => {
-            const element = card;
+            const element = card as HTMLElement;
             element.style.animationDelay = `${index * 100}ms`;
             element.classList.add('animate-fade-in');
         });
     }
-    getFilteredImages() {
+
+    private getFilteredImages(): ImageAsset[] {
         return this.images.filter(image => {
-            var _a;
             if (this.currentFilter !== 'all') {
                 const imageType = image.transformation_type || 'original';
-                if (imageType !== this.currentFilter)
-                    return false;
+                if (imageType !== this.currentFilter) return false;
             }
             const searchTerm = this.searchInput.value.toLowerCase().trim();
             if (searchTerm) {
-                const title = ((_a = image.title) === null || _a === void 0 ? void 0 : _a.toLowerCase()) || '';
-                if (!title.includes(searchTerm))
-                    return false;
+                const title = image.title?.toLowerCase() || '';
+                if (!title.includes(searchTerm)) return false;
             }
             return true;
         });
     }
-    getTransformationLabel(type) {
-        var _a;
-        if (!type)
-            return 'Original';
-        return ((_a = TOOL_CONFIG[type]) === null || _a === void 0 ? void 0 : _a.name) || type;
+
+    private getTransformationLabel(type?: string): string {
+        if (!type) return 'Original';
+        return TOOL_CONFIG[type as ImageTool]?.name || type;
     }
-    handleFilterChange(button) {
+
+    private handleFilterChange(button: HTMLButtonElement): void {
         this.filterButtons.forEach(btn => btn.classList.remove('active'));
         button.classList.add('active');
         this.currentFilter = button.dataset.filter || 'all';
         this.renderImages();
     }
-    applyFilters() {
+
+    private applyFilters(): void {
         this.renderImages();
     }
-    toggleSelectAll() {
+
+    private toggleSelectAll(): void {
         const filteredImages = this.getFilteredImages();
         if (this.selectedImages.size === filteredImages.length) {
             this.selectedImages.clear();
-        }
-        else {
+        } else {
             filteredImages.forEach(image => this.selectedImages.add(image.id));
         }
         this.renderImages();
         this.updateSelectionUI();
     }
-    toggleImageSelection(imageId) {
+
+    public toggleImageSelection(imageId: string): void {
         if (this.selectedImages.has(imageId)) {
             this.selectedImages.delete(imageId);
-        }
-        else {
+        } else {
             this.selectedImages.add(imageId);
         }
         this.updateSelectionUI();
         this.updateImageCardSelection(imageId);
     }
-    updateImageCardSelection(imageId) {
-        const card = document.querySelector(`[data-image-id="${imageId}"]`);
-        if (!card)
-            return;
+
+    private updateImageCardSelection(imageId: string): void {
+        const card = document.querySelector(`[data-image-id="${imageId}"]`) as HTMLElement;
+        if (!card) return;
         if (this.selectedImages.has(imageId)) {
             card.classList.add('selected');
-        }
-        else {
+        } else {
             card.classList.remove('selected');
         }
     }
-    updateSelectionUI() {
+
+    private updateSelectionUI(): void {
         const selectedCount = this.selectedImages.size;
         this.deleteSelectedBtn.style.display = selectedCount > 0 ? 'block' : 'none';
         this.selectAllBtn.textContent = selectedCount > 0 ? `Selected (${selectedCount})` : 'Select All';
     }
-    updateStats() {
+
+    private updateStats(): void {
         const totalImages = this.images.length;
         const totalElement = document.getElementById('totalImages');
-        if (totalElement)
-            totalElement.textContent = totalImages.toString();
+        if (totalElement) totalElement.textContent = totalImages.toString();
+
         const transformationCounts = this.images.reduce((acc, image) => {
             const type = image.transformation_type || 'original';
             acc[type] = (acc[type] || 0) + 1;
             return acc;
-        }, {});
+        }, {} as Record<string, number>);
+
         Object.entries(transformationCounts).forEach(([type, count]) => {
             const element = document.getElementById(`${type}Count`);
-            if (element)
-                element.textContent = count.toString();
+            if (element) element.textContent = count.toString();
         });
     }
-    async deleteSelectedImages() {
-        if (this.selectedImages.size === 0)
-            return;
-        if (!confirm(`Delete ${this.selectedImages.size} image(s)? This cannot be undone.`))
-            return;
+
+    private async deleteSelectedImages(): Promise<void> {
+        if (this.selectedImages.size === 0) return;
+        if (!confirm(`Delete ${this.selectedImages.size} image(s)? This cannot be undone.`)) return;
+
         try {
             const deletePromises = Array.from(this.selectedImages).map(id => this.deleteImage(id));
             await Promise.all(deletePromises);
             showToast(`Deleted ${this.selectedImages.size} images`, 'success');
             this.selectedImages.clear();
             await this.loadImages();
-        }
-        catch {
+        } catch {
             showToast('Some images failed to delete', 'error');
         }
     }
-    async deleteImage(imageId) {
+
+    private async deleteImage(imageId: string): Promise<void> {
         await api.delete(`/images/${imageId}`);
         this.images = this.images.filter(img => img.id !== imageId);
     }
 }
+
 document.addEventListener('DOMContentLoaded', () => {
     ensureLoggedIn();
-    window.gallery = new GalleryManager();
+    (window as any).gallery = new GalleryManager();
 });

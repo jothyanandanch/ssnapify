@@ -1,23 +1,28 @@
 class ThemeManager {
+    private currentTheme: 'light' | 'dark' = 'light';
+
     constructor() {
-        this.currentTheme = 'light';
         this.initializeTheme();
         this.setupToggle();
     }
-    initializeTheme() {
+
+    private initializeTheme(): void {
         // Check for saved theme preference or default to 'light'
-        const savedTheme = localStorage.getItem('theme');
+        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark';
         const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
         this.currentTheme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
         this.applyTheme(this.currentTheme);
     }
-    setupToggle() {
+
+    private setupToggle(): void {
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
             themeToggle.addEventListener('click', () => {
                 this.toggleTheme();
             });
         }
+
         // Listen for system theme changes
         window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
             if (!localStorage.getItem('theme')) {
@@ -25,27 +30,34 @@ class ThemeManager {
             }
         });
     }
-    applyTheme(theme) {
+
+    private applyTheme(theme: 'light' | 'dark'): void {
         this.currentTheme = theme;
         document.documentElement.setAttribute('data-theme', theme);
+        
         const themeToggle = document.getElementById('themeToggle');
         if (themeToggle) {
             themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
         }
     }
-    toggleTheme() {
+
+    public toggleTheme(): void {
         const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
         this.applyTheme(newTheme);
         localStorage.setItem('theme', newTheme);
     }
-    getCurrentTheme() {
+
+    public getCurrentTheme(): 'light' | 'dark' {
         return this.currentTheme;
     }
-    setTheme(theme) {
+
+    public setTheme(theme: 'light' | 'dark'): void {
         this.applyTheme(theme);
         localStorage.setItem('theme', theme);
     }
 }
+
 const themeManager = new ThemeManager();
+
 export { themeManager };
 export default themeManager;

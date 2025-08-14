@@ -1,74 +1,88 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Upload · SS AI IMAGE ENHANCE SERVICES</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="styles/base.css" rel="stylesheet">
-  <link href="styles/layout.css" rel="stylesheet">
-  <link href="styles/components.css" rel="stylesheet">
-  <link href="styles/theme.css" rel="stylesheet">
-  <link href="styles/upload.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload - SSnapify</title>
+    <!-- Updated CSS References -->
+    <link rel="stylesheet" href="/styles/base.css">
+    <link rel="stylesheet" href="/styles/components.css">
+    <link rel="stylesheet" href="/styles/animation.css">
+    <link rel="stylesheet" href="/styles/upload.css">
+    <link rel="icon" href="/assets/favicon.ico">
 </head>
 <body>
-<header class="header">
-  <div class="nav">
-    <div class="brand">
-      <img src="assets/logo.png" alt="logo">
-      <span>SS AI IMAGE ENHANCE SERVICES</span>
-    </div>
-    <nav class="navlinks">
-      <a href="/static/index.html">Home</a>
-      <a href="/static/dashboard.html">Dashboard</a>
-      <a href="/static/gallery.html">Gallery</a>
-      <a class="active" href="/static/upload.html">Upload</a>
-      <a href="/static/pricing.html">Pricing</a>
-      <a href="/static/support.html">Support</a>
-      <button id="theme-toggle" class="theme-toggle" type="button">Theme</button>
-      <button id="logout" class="btn ghost" type="button">Logout</button>
-    </nav>
-  </div>
-</header>
-
-<section class="section">
-  <div class="container">
-    <div class="uploader">
-      <div class="card drop">
-        <h3>Upload an Image</h3>
-        <p class="hint">Accepted formats: JPG, PNG. 1 credit upload (admins free).</p>
-        <div class="preview" id="preview"><span class="small">Preview will appear here.</span></div>
-        <div style="margin-top:12px;">
-          <label class="btn ghost">
-            Choose File
-            <input id="file" type="file" accept="image/*">
-          </label>
-          <input id="title" class="input" placeholder="Optional title" style="margin-top:8px;">
-          <button id="submit" class="btn" disabled>Upload</button>
+    <nav class="navbar glass-effect">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="assets/logo.png" alt="SSnapify" class="logo">
+                <span class="brand-text">SSnapify</span>
+            </div>
+            <div class="nav-links">
+                <a href="dashboard.html" class="nav-link">Dashboard</a>
+                <a href="gallery.html" class="nav-link">Gallery</a>
+                <button id="logout" class="btn btn-secondary">Logout</button>
+            </div>
+            <button class="theme-toggle" id="themeToggle">🌙</button>
         </div>
-      </div>
-      <div class="card" style="padding:16px;">
-        <h3>Tips</h3>
-        <ul>
-          <li>Use higher resolution for better results.</li>
-          <li>Use gallery to apply AI transformations after upload.</li>
-          <li>Check Dashboard for credits and reset times.</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
+    </nav>
 
-<footer class="footer">
-  <div class="container">
-    <span>© SS AI IMAGE ENHANCE SERVICES</span>
-    <span class="small">Secure uploads powered by Cloudinary</span>
-  </div>
-</footer>
+    <main class="upload-main">
+        <div class="upload-container">
+            <div class="upload-header">
+                <h1 class="upload-title">Upload Your Images</h1>
+                <p class="upload-subtitle">Drag & drop files or click to browse</p>
+            </div>
 
-<script src="js/config.js"></script>
-<script src="js/theme.js"></script>
-<script src="js/api.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/upload.js"></script>
+            <div class="upload-area" id="uploadArea">
+                <div class="drag-drop-zone" id="dropZone">
+                    <div class="upload-icon animate-bounce">📁</div>
+                    <h3>Drop your images here</h3>
+                    <p>or click to browse files</p>
+                    <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                    <div class="upload-formats">
+                        <span class="format-tag">JPG</span>
+                        <span class="format-tag">PNG</span>
+                        <span class="format-tag">WEBP</span>
+                        <span class="format-tag">GIF</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="file-preview-container" id="filePreviewContainer">
+                <h3>Selected Files</h3>
+                <div class="file-preview-grid" id="filePreviewGrid"></div>
+            </div>
+
+            <div class="upload-actions" id="uploadActions" style="display: none;">
+                <button class="btn btn-primary btn-lg" id="uploadBtn">
+                    <span class="btn-text">Upload Files</span>
+                    <div class="loading-spinner" style="display: none;"></div>
+                </button>
+                <button class="btn btn-secondary" id="clearBtn">Clear All</button>
+            </div>
+        </div>
+
+        <div class="upload-stats glass-effect">
+            <div class="stat-item">
+                <span class="stat-label">Credits</span>
+                <span class="stat-value" id="creditBalance">-</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Files Ready</span>
+                <span class="stat-value" id="filesReady">0</span>
+            </div>
+        </div>
+    </main>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Updated Script References -->
+    <script type="module" src="/js/config.js"></script>
+    <script type="module" src="/js/api.js"></script>
+    <script type="module" src="/js/auth.js"></script>
+    <script type="module" src="/js/theme.js"></script>
+    <script type="module" src="/js/utils.js"></script>
+    <script type="module" src="/js/upload.js"></script>
 </body>
 </html>

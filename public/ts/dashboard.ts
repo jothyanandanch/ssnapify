@@ -1,91 +1,107 @@
-import { api } from './api.js';
+import { api, APIError } from './api.js';
+import { User, Credits, ImageAsset } from './types.js';
 import { showToast, formatDate } from './utils.js';
 import { ensureLoggedIn, getUser, refreshUser } from './auth.js';
+
 class DashboardManager {
+    private user: User | null = null;
+    private credits: Credits | null = null;
+    private recentImages: ImageAsset[] = [];
+
     constructor() {
-        this.user = null;
-        this.credits = null;
-        this.recentImages = [];
         this.initializeDashboard();
         this.setupEventListeners();
     }
-    async initializeDashboard() {
+
+    private async initializeDashboard(): Promise<void> {
         try {
             await this.loadUserData();
             await this.loadCredits();
             await this.loadRecentImages();
             this.renderDashboard();
-        }
-        catch (error) {
+        } catch (error) {
             console.error('Failed to initialize dashboard:', error);
             showToast('Failed to load dashboard data', 'error');
         }
     }
-    setupEventListeners() {
-        var _a, _b;
+
+    private setupEventListeners(): void {
         // Refresh button
         const refreshBtn = document.getElementById('refreshData');
         if (refreshBtn) {
             refreshBtn.addEventListener('click', () => this.refreshDashboard());
         }
+
         // Date range filters
-        const dateFromInput = document.getElementById('dateFrom');
-        const dateToInput = document.getElementById('dateTo');
+        const dateFromInput = document.getElementById('dateFrom') as HTMLInputElement;
+        const dateToInput = document.getElementById('dateTo') as HTMLInputElement;
+        
         if (dateFromInput && dateToInput) {
             dateFromInput.addEventListener('change', () => this.loadRecentImages());
             dateToInput.addEventListener('change', () => this.loadRecentImages());
         }
+
         // Quick action buttons
-        (_a = document.getElementById('quickUpload')) === null || _a === void 0 ? void 0 : _a.addEventListener('click', () => {
+        document.getElementById('quickUpload')?.addEventListener('click', () => {
             window.location.href = 'upload.html';
         });
-        (_b = document.getElementById('viewGallery')) === null || _b === void 0 ? void 0 : _b.addEventListener('click', () => {
+
+        document.getElementById('viewGallery')?.addEventListener('click', () => {
             window.location.href = 'gallery.html';
         });
     }
-    async loadUserData() {
+
+    private async loadUserData(): Promise<void> {
         this.user = getUser();
         if (!this.user) {
             await refreshUser();
             this.user = getUser();
         }
     }
-    async loadCredits() {
-        this.credits = await api.get('/account/credits');
+
+    private async loadCredits(): Promise<void> {
+        this.credits = await api.get<Credits>('/account/credits');
     }
-    async loadRecentImages() {
-        const params = {};
-        const dateFromInput = document.getElementById('dateFrom');
-        const dateToInput = document.getElementById('dateTo');
-        if (dateFromInput === null || dateFromInput === void 0 ? void 0 : dateFromInput.value)
-            params.from = dateFromInput.value;
-        if (dateToInput === null || dateToInput === void 0 ? void 0 : dateToInput.value)
-            params.to = dateToInput.value;
+
+    private async loadRecentImages(): Promise<void> {
+        const params: Record<string, string> = {};
+        
+        const dateFromInput = document.getElementById('dateFrom') as HTMLInputElement;
+        const dateToInput = document.getElementById('dateTo') as HTMLInputElement;
+        
+        if (dateFromInput?.value) params.from = dateFromInput.value;
+        if (dateToInput?.value) params.to = dateToInput.value;
+
         // Limit to recent 10 images
         params.limit = '10';
-        this.recentImages = await api.get('/images', params);
+        
+        this.recentImages = await api.get<ImageAsset[]>('/images', params);
     }
-    renderDashboard() {
+
+    private renderDashboard(): void {
         this.renderUserWelcome();
         this.renderKPIs();
         this.renderCreditsInfo();
         this.renderRecentImages();
         this.renderQuickStats();
     }
-    renderUserWelcome() {
+
+    private renderUserWelcome(): void {
         const welcomeElement = document.getElementById('userWelcome');
         if (welcomeElement && this.user) {
             const userName = this.user.username || this.user.email.split('@')[0];
             const timeOfDay = this.getTimeOfDay();
+            
             welcomeElement.innerHTML = `
                 <h1>Good ${timeOfDay}, ${userName}! 👋</h1>
                 <p>Welcome back to your SSnapify dashboard</p>
             `;
         }
     }
-    renderKPIs() {
-        if (!this.credits)
-            return;
+
+    private renderKPIs(): void {
+        if (!this.credits) return;
+
         // Credits remaining
         const creditsElement = document.getElementById('creditsRemaining');
         if (creditsElement) {
@@ -97,10 +113,14 @@ class DashboardManager {
                 </div>
             `;
         }
+
         // Images this month
         const thisMonth = new Date();
         const monthStart = new Date(thisMonth.getFullYear(), thisMonth.getMonth(), 1);
-        const imagesThisMonth = this.recentImages.filter(img => new Date(img.created_at) >= monthStart).length;
+        const imagesThisMonth = this.recentImages.filter(img => 
+            new Date(img.created_at) >= monthStart
+        ).length;
+
         const imagesElement = document.getElementById('imagesThisMonth');
         if (imagesElement) {
             imagesElement.innerHTML = `
@@ -109,8 +129,12 @@ class DashboardManager {
                 <div class="kpi-trend positive">📈 ${imagesThisMonth > 0 ? 'Active' : 'Get Started'}</div>
             `;
         }
+
         // Total transformations
-        const totalTransformations = this.recentImages.filter(img => img.transformation_type && img.transformation_type !== 'original').length;
+        const totalTransformations = this.recentImages.filter(img => 
+            img.transformation_type && img.transformation_type !== 'original'
+        ).length;
+
         const transformationsElement = document.getElementById('totalTransformations');
         if (transformationsElement) {
             transformationsElement.innerHTML = `
@@ -120,13 +144,15 @@ class DashboardManager {
             `;
         }
     }
-    renderCreditsInfo() {
-        if (!this.credits)
-            return;
+
+    private renderCreditsInfo(): void {
+        if (!this.credits) return;
+
         const creditsInfoElement = document.getElementById('creditsInfo');
         if (creditsInfoElement) {
             const nextReset = new Date(this.credits.next_reset_time);
             const daysUntilReset = this.credits.days_until_next_reset;
+
             creditsInfoElement.innerHTML = `
                 <div class="credits-details glass-effect">
                     <h3>Credits Information</h3>
@@ -160,10 +186,11 @@ class DashboardManager {
             `;
         }
     }
-    renderRecentImages() {
+
+    private renderRecentImages(): void {
         const recentImagesElement = document.getElementById('recentImages');
-        if (!recentImagesElement)
-            return;
+        if (!recentImagesElement) return;
+
         if (this.recentImages.length === 0) {
             recentImagesElement.innerHTML = `
                 <div class="empty-state">
@@ -175,6 +202,7 @@ class DashboardManager {
             `;
             return;
         }
+
         recentImagesElement.innerHTML = `
             <h3>Recent Images</h3>
             <div class="recent-images-grid">
@@ -198,20 +226,22 @@ class DashboardManager {
             ` : ''}
         `;
     }
-    renderQuickStats() {
-        var _a, _b;
+
+    private renderQuickStats(): void {
         const quickStatsElement = document.getElementById('quickStats');
-        if (!quickStatsElement)
-            return;
+        if (!quickStatsElement) return;
+
         // Calculate stats
         const totalImages = this.recentImages.length;
         const transformationTypes = this.recentImages.reduce((acc, img) => {
             const type = img.transformation_type || 'original';
             acc[type] = (acc[type] || 0) + 1;
             return acc;
-        }, {});
+        }, {} as Record<string, number>);
+
         const mostUsedTransformation = Object.entries(transformationTypes)
-            .sort(([, a], [, b]) => b - a)[0];
+            .sort(([,a], [,b]) => b - a)[0];
+
         quickStatsElement.innerHTML = `
             <div class="quick-stats-grid">
                 <div class="stat-card">
@@ -234,7 +264,7 @@ class DashboardManager {
                     <div class="stat-icon">🎯</div>
                     <div class="stat-info">
                         <h4>Account Status</h4>
-                        <p>${((_a = this.user) === null || _a === void 0 ? void 0 : _a.is_active) ? 'Active' : 'Inactive'}</p>
+                        <p>${this.user?.is_active ? 'Active' : 'Inactive'}</p>
                     </div>
                 </div>
                 
@@ -242,16 +272,17 @@ class DashboardManager {
                     <div class="stat-icon">💎</div>
                     <div class="stat-info">
                         <h4>Plan</h4>
-                        <p>${((_b = this.credits) === null || _b === void 0 ? void 0 : _b.plan_id) || 'Free'}</p>
+                        <p>${this.credits?.plan_id || 'Free'}</p>
                     </div>
                 </div>
             </div>
         `;
     }
-    getTransformationLabel(type) {
-        if (!type || type === 'original')
-            return 'Original';
-        const transformationLabels = {
+
+    private getTransformationLabel(type?: string): string {
+        if (!type || type === 'original') return 'Original';
+        
+        const transformationLabels: Record<string, string> = {
             'restore': 'Restored',
             'remove_bg': 'Background Removed',
             'remove_obj': 'Object Removed',
@@ -259,31 +290,31 @@ class DashboardManager {
             'generative_fill': 'Generative Fill',
             'replace_background': 'Background Replaced'
         };
+        
         return transformationLabels[type] || type;
     }
-    getTimeOfDay() {
+
+    private getTimeOfDay(): string {
         const hour = new Date().getHours();
-        if (hour < 12)
-            return 'morning';
-        if (hour < 17)
-            return 'afternoon';
+        if (hour < 12) return 'morning';
+        if (hour < 17) return 'afternoon';
         return 'evening';
     }
-    async refreshDashboard() {
-        const refreshBtn = document.getElementById('refreshData');
+
+    private async refreshDashboard(): Promise<void> {
+        const refreshBtn = document.getElementById('refreshData') as HTMLButtonElement;
         if (refreshBtn) {
             refreshBtn.disabled = true;
             refreshBtn.innerHTML = '<div class="loading-spinner"></div> Refreshing...';
         }
+
         try {
             await this.initializeDashboard();
             showToast('Dashboard refreshed successfully', 'success');
-        }
-        catch (error) {
+        } catch (error) {
             console.error('Failed to refresh dashboard:', error);
             showToast('Failed to refresh dashboard', 'error');
-        }
-        finally {
+        } finally {
             if (refreshBtn) {
                 refreshBtn.disabled = false;
                 refreshBtn.innerHTML = '🔄 Refresh';
@@ -291,6 +322,7 @@ class DashboardManager {
         }
     }
 }
+
 // Initialize dashboard when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     ensureLoggedIn();

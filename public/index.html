@@ -1,73 +1,141 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>SS AI IMAGE ENHANCE SERVICES</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="styles/base.css" rel="stylesheet">
-  <link href="styles/layout.css" rel="stylesheet">
-  <link href="styles/components.css" rel="stylesheet">
-  <link href="styles/theme.css" rel="stylesheet">
-  <link href="styles/index.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSnapify - AI-Powered Image Processing</title>
+    <!-- Updated CSS References -->
+    <link rel="stylesheet" href="/styles/base.css">
+    <link rel="stylesheet" href="/styles/components.css">
+    <link rel="stylesheet" href="/styles/animation.css">
+    <link rel="stylesheet" href="/styles/index.css">
+    <link rel="icon" href="/assets/favicon.ico">
 </head>
 <body>
-  <header class="header">
-    <div class="nav">
-      <div class="brand">
-        <img src="assets/logo.png" alt="logo">
-        <span>SS AI IMAGE ENHANCE SERVICES</span>
-      </div>
-      <nav class="navlinks">
-        <a class="active" href="/static/index.html">Home</a>
-        <a href="/static/dashboard.html">Dashboard</a>
-        <a href="/static/gallery.html">Gallery</a>
-        <a href="/static/upload.html">Upload</a>
-        <a href="/static/pricing.html">Pricing</a>
-        <a href="/static/support.html">Support</a>
-        <button id="theme-toggle" class="theme-toggle" type="button">Theme</button>
-        <a href="/static/login.html" class="btn ghost">Login</a>
-      </nav>
+    <nav class="navbar glass-effect">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="/assets/logo.png" alt="SSnapify" class="logo">
+                <span class="brand-text">SSnapify</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="pricing.html" class="nav-link">Pricing</a>
+                <a href="login.html" class="btn btn-primary">Get Started</a>
+            </div>
+            <button class="theme-toggle" id="themeToggle">🌙</button>
+        </div>
+    </nav>
+
+    <main class="hero-section">
+        <div class="hero-background">
+            <div class="floating-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+            </div>
+        </div>
+        
+        <div class="hero-content">
+            <h1 class="hero-title animate-fade-in">
+                Transform Your Images with
+                <span class="gradient-text">AI Magic</span>
+            </h1>
+            <p class="hero-subtitle animate-fade-in-delay">
+                Remove backgrounds, enhance quality, restore old photos, and create stunning visuals with our cutting-edge AI technology.
+            </p>
+            
+            <div class="cta-buttons animate-fade-in-delay-2">
+                <a href="upload.html" class="btn btn-primary btn-lg pulse-animation">
+                    Start Creating
+                </a>
+                <a href="gallery.html" class="btn btn-secondary btn-lg">
+                    View Gallery
+                </a>
+            </div>
+        </div>
+
+        <div class="features-preview" id="features">
+            <h2 class="section-title">Powerful AI Tools</h2>
+            <div class="tools-grid">
+                <div class="tool-card interactive-card" data-tool="restore">
+                    <div class="tool-icon">🔧</div>
+                    <h3>Photo Restoration</h3>
+                    <p>Bring old, damaged photos back to life</p>
+                    <div class="tool-overlay">
+                        <button class="try-tool-btn">Try Now</button>
+                    </div>
+                </div>
+                
+                <div class="tool-card interactive-card" data-tool="remove_bg">
+                    <div class="tool-icon">🎭</div>
+                    <h3>Background Removal</h3>
+                    <p>Remove backgrounds with pixel-perfect precision</p>
+                    <div class="tool-overlay">
+                        <button class="try-tool-btn">Try Now</button>
+                    </div>
+                </div>
+                
+                <div class="tool-card interactive-card" data-tool="remove_obj">
+                    <div class="tool-icon">✂️</div>
+                    <h3>Object Removal</h3>
+                    <p>Seamlessly remove unwanted objects</p>
+                    <div class="tool-overlay">
+                        <button class="try-tool-btn">Try Now</button>
+                    </div>
+                </div>
+                
+                <div class="tool-card interactive-card" data-tool="image_enhancer">
+                    <div class="tool-icon">✨</div>
+                    <h3>Image Enhancement</h3>
+                    <p>Enhance sharpness and overall quality</p>
+                    <div class="tool-overlay">
+                        <button class="try-tool-btn">Try Now</button>
+                    </div>
+                </div>
+                
+                <div class="tool-card interactive-card" data-tool="generative_fill">
+                    <div class="tool-icon">🎨</div>
+                    <h3>Generative Fill</h3>
+                    <p>Fill areas with AI-generated content</p>
+                    <div class="tool-overlay">
+                        <button class="try-tool-btn">Try Now</button>
+                    </div>
+                </div>
+                
+                <div class="tool-card interactive-card" data-tool="replace_background">
+                    <div class="tool-icon">🖼️</div>
+                    <h3>Background Replace</h3>
+                    <p>Replace backgrounds with AI creativity</p>
+                    <div class="tool-overlay">
+                        <button class="try-tool-btn">Try Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="universal-upload-overlay" id="universalUpload">
+        <div class="upload-modal glass-effect">
+            <div class="upload-header">
+                <h3>Quick Upload & Process</h3>
+                <button class="close-btn" id="closeUpload">&times;</button>
+            </div>
+            <div class="drag-drop-zone" id="quickDropZone">
+                <div class="upload-icon">📸</div>
+                <p>Drag & drop your image here or click to browse</p>
+                <input type="file" id="quickFileInput" accept="image/*" hidden>
+            </div>
+            <div class="selected-tool-info" id="selectedToolInfo"></div>
+        </div>
     </div>
-  </header>
 
-  <section class="hero">
-    <div class="container">
-      <h1>Enhance, Restore, and Transform Images with AI</h1>
-      <p>Restore details, remove backgrounds, remove objects, enhance quality, and generate fills with precision.</p>
-      <div style="margin-top:16px;">
-        <a class="btn" href="/static/upload.html">Start Enhancing</a>
-        <a class="btn ghost" href="/static/gallery.html">View Gallery</a>
-      </div>
+    <div class="toast-container" id="toastContainer"></div>
 
-      <div class="features">
-        <div class="feature">
-          <h3>AI Restore</h3>
-          <p>Remove noise and bring back lost detail.</p>
-        </div>
-        <div class="feature">
-          <h3>Background Remove/Replace</h3>
-          <p>Cut out subjects or replace with AI‑generated scenes.</p>
-        </div>
-        <div class="feature">
-          <h3>Object Removal</h3>
-          <p>Erase distractions with smart inpainting.</p>
-        </div>
-        <div class="feature">
-          <h3>Quality Enhance</h3>
-          <p>Sharpen and improve visual clarity automatically.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="footer">
-    <div class="container">
-      <span>© SS AI IMAGE ENHANCE SERVICES</span>
-      <span class="small">AI imaging, simplified.</span>
-    </div>
-  </footer>
-
-  <script src="js/config.js"></script>
-  <script src="js/theme.js"></script>
+    <!-- Updated Script References - TypeScript modules -->
+    <script type="module" src="/js/config.js"></script>
+    <script type="module" src="/js/theme.js"></script>
+    <script type="module" src="/js/utils.js"></script>
+    <script type="module" src="/js/index.js"></script>
 </body>
 </html>

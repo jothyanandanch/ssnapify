@@ -5,7 +5,10 @@ export const CONFIG = {
     SUPPORTED_FORMATS: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
     ANIMATION_DURATION: 300,
     TOAST_DURATION: 5000
-};
+} as const;
+
+export type ImageTool = 'restore' | 'remove_bg' | 'remove_obj' | 'image_enhancer' | 'generative_fill' | 'replace_background';
+
 export const TOOL_CONFIG = {
     restore: {
         name: 'Photo Restoration',
@@ -43,4 +46,4 @@ export const TOOL_CONFIG = {
         description: 'Replace with custom backgrounds',
         credits: 3
     }
-};
+} as const;
