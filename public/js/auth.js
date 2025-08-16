@@ -1,114 +1,207 @@
-import { api, APIError } from './api.js';
 class AuthManager {
     constructor() {
-        this.user = null;
+        this.tokenKey = 'access_token';
+        this.userKey = 'user_data';
         this.token = null;
-        this.token = localStorage.getItem('token');
-        this.initializeAuth();
+        this.user = null;
+        this.init();
     }
-    initializeAuth() {
+
+    init() {
+        this.loadFromStorage();
+        this.checkURLToken();
+        this.updateUI();
+        this.bindEvents();
+    }
+
+    // Load token and user data from localStorage
+    loadFromStorage() {
+        this.token = localStorage.getItem(this.tokenKey);
+        const userData = localStorage.getItem(this.userKey);
+        this.user = userData ? JSON.parse(userData) : null;
+    }
+
+    // Check for token in URL (from OAuth callback)
+    checkURLToken() {
         const urlParams = new URLSearchParams(window.location.search);
-        const urlToken = urlParams.get('token');
-        if (urlToken) {
-            this.setToken(urlToken);
+        const token = urlParams.get('token');
+        
+        if (token) {
+            this.saveToken(token);
+            this.fetchUserData();
+            // Clean URL
             window.history.replaceState({}, document.title, window.location.pathname);
         }
     }
-    setToken(token) {
+
+    // Save token to localStorage
+    saveToken(token) {
         this.token = token;
-        localStorage.setItem('token', token);
-        this.loadUserProfile();
+        localStorage.setItem(this.tokenKey, token);
     }
-    clearToken() {
-        this.token = null;
-        this.user = null;
-        localStorage.removeItem('token');
+
+    // Save user data to localStorage
+    saveUser(userData) {
+        this.user = userData;
+        localStorage.setItem(this.userKey, JSON.stringify(userData));
     }
-    getToken() {
-        return this.token;
-    }
-    getUser() {
-        return this.user;
-    }
-    isAuthenticated() {
-        return !!this.token;
-    }
-    isAdmin() {
-        var _a, _b;
-        return (_b = (_a = this.user) === null || _a === void 0 ? void 0 : _a.is_admin) !== null && _b !== void 0 ? _b : false;
-    }
-    async loadUserProfile() {
-        if (!this.token)
-            return;
+
+    // Fetch user data from API
+    async fetchUserData() {
+        if (!this.token) return;
+
         try {
-            this.user = await api.get('/users/me');
-        }
-        catch (error) {
-            console.error('Failed to load user profile:', error);
-            if (error instanceof APIError && error.status === 401) {
-                this.clearToken();
-                this.redirectToLogin();
+            const response = await fetch('/users/me', {
+                headers: {
+                    'Authorization': `Bearer ${this.token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                this.saveUser(userData);
+                this.updateUI();
+                
+                // Redirect to dashboard if on login page
+                if (window.location.pathname.includes('login.html')) {
+                    window.location.href = '/static/dashboard.html';
+                }
+            } else {
+                this.clearAuth();
             }
+        } catch (error) {
+            console.error('Failed to fetch user data:', error);
+            this.clearAuth();
         }
     }
+
+    // Update UI based on auth state
+    updateUI() {
+        const loginBtn = document.getElementById('btn-login');
+        const logoutBtn = document.getElementById('btn-logout');
+        const userInfo = document.getElementById('user-info');
+        const authRequiredElements = document.querySelectorAll('.auth-required');
+
+        if (this.isAuthenticated()) {
+            // User is logged in
+            if (loginBtn) loginBtn.style.display = 'none';
+            if (logoutBtn) logoutBtn.style.display = 'inline-block';
+            if (userInfo) userInfo.textContent = this.user?.username || this.user?.email || 'User';
+            
+            // Show auth-required elements
+            authRequiredElements.forEach(el => el.style.display = 'block');
+        } else {
+            // User is not logged in
+            if (loginBtn) loginBtn.style.display = 'inline-block';
+            if (logoutBtn) logoutBtn.style.display = 'none';
+            if (userInfo) userInfo.textContent = '';
+            
+            // Hide auth-required elements
+            authRequiredElements.forEach(el => el.style.display = 'none');
+        }
+    }
+
+    // Bind logout event
+    bindEvents() {
+        const logoutBtn = document.getElementById('btn-logout');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.logout();
+            });
+        }
+    }
+
+    // Logout function
     async logout() {
         try {
             if (this.token) {
-                await api.post('/logout', {});
+                await fetch('/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
             }
-        }
-        catch (error) {
-            console.error('Logout request failed:', error);
-        }
-        finally {
-            this.clearToken();
-            this.redirectToLogin();
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            this.clearAuth();
+            window.location.href = '/static/index.html';
         }
     }
-    redirectToLogin() {
-        if (!window.location.pathname.includes('login.html')) {
+
+    // Clear authentication data
+    clearAuth() {
+        localStorage.removeItem(this.tokenKey);
+        localStorage.removeItem(this.userKey);
+        this.token = null;
+        this.user = null;
+        this.updateUI();
+    }
+
+    // Check if user is authenticated
+    isAuthenticated() {
+        return Boolean(this.token && this.user);
+    }
+
+    // Get authentication headers for API calls
+    getAuthHeaders() {
+        return this.token ? {
+            'Authorization': `Bearer ${this.token}`,
+            'Content-Type': 'application/json'
+        } : {
+            'Content-Type': 'application/json'
+        };
+    }
+
+    // Make authenticated API call
+    async apiCall(url, options = {}) {
+        if (!this.isAuthenticated()) {
             window.location.href = '/static/login.html';
+            return null;
+        }
+
+        const defaultOptions = {
+            headers: this.getAuthHeaders()
+        };
+
+        const mergedOptions = {
+            ...defaultOptions,
+            ...options,
+            headers: {
+                ...defaultOptions.headers,
+                ...options.headers
+            }
+        };
+
+        try {
+            const response = await fetch(url, mergedOptions);
+            
+            if (response.status === 401) {
+                this.clearAuth();
+                window.location.href = '/static/login.html';
+                return null;
+            }
+
+            return response;
+        } catch (error) {
+            console.error('API call error:', error);
+            throw error;
         }
     }
-    async refreshUserProfile() {
-        await this.loadUserProfile();
+
+    // Require authentication for current page
+    requireAuth() {
+        if (!this.isAuthenticated()) {
+            window.location.href = '/static/login.html';
+            return false;
+        }
+        return true;
     }
 }
-const authManager = new AuthManager();
-export function ensureLoggedIn() {
-    if (!authManager.isAuthenticated()) {
-        window.location.href = '/static/login.html';
-        return;
-    }
-}
-export function getToken() {
-    return authManager.getToken();
-}
-export function getUser() {
-    return authManager.getUser();
-}
-export function isAuthenticated() {
-    return authManager.isAuthenticated();
-}
-export function isAdmin() {
-    return authManager.isAdmin();
-}
-export async function logout() {
-    return authManager.logout();
-}
-export async function refreshUser() {
-    return authManager.refreshUserProfile();
-}
-export function attachLogout() {
-    const logoutBtn = document.getElementById('logout');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            await logout();
-        });
-    }
-}
-document.addEventListener('DOMContentLoaded', () => {
-    attachLogout();
-});
-export { authManager };
+
+// Initialize global auth manager
+window.authManager = new AuthManager();

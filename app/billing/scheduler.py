@@ -1,4 +1,3 @@
-# app/billing/scheduler.py
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy.orm import Session
@@ -15,25 +14,19 @@ def reset_all_users():
     db: Session = SessionLocal()
     try:
         current = now_utc()
-
         # Simple approach: iterate. For scale, paginate by primary key ranges.
         users = db.query(User).all()
-
         any_changes = False
         for user in users:
             changed = False
-
             # 1) Expiration check (flip to free if expired)
             if handle_expiration(user, current):
                 changed = True
-
             # 2) Reset check (free or paid cycle)
             if apply_monthly_reset(user, current):
                 changed = True
-
             if changed:
                 any_changes = True
-
         if any_changes:
             db.commit()
     finally:

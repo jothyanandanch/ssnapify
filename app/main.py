@@ -1,226 +1,771 @@
-from contextlib import asynccontextmanager
-from typing import List, Optional
-from datetime import datetime, timezone
-
-from app.services import cloudinary_service
-from fastapi import FastAPI, Depends, HTTPException, status, Request, Query, UploadFile, File
-from fastapi.routing import APIRouter
+from fastapi import FastAPI, Depends, HTTPException, status, Request, Query, UploadFile, File, Form
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, FileResponse, JSONResponse
+from fastapi.routing import APIRouter
+from contextlib import asynccontextmanager
+from sqlalchemy.orm import Session
+from datetime import datetime, timezone
+import os
+from typing import Optional, List
+
 from starlette.middleware.sessions import SessionMiddleware
 
-from jose import JWTError, jwt
-from sqlalchemy.orm import Session
-from pydantic import BaseModel, Field
+# Database imports
+from app.database import get_db, engine
+from app import models
+
+# Your existing auth imports
+from app.auth.security import get_current_user, create_access_token, oauth2_scheme
+from app.auth.google_oauth import oauth
+
+# Your existing models
+from app.models.user import User
+from app.models.image import Image
+
+# Your existing services
+from app.services.cloudinary_service import cloudinary_service
+from app.services.redis_service import redis_service
+
+# Your billing system
+from app.billing.scheduler import start_scheduler
+from app.billing.enforce import ensure_credits_or_admin
+from app.billing.plans import PLANS, FREE_PLAN_ID
+from app.billing.resets import apply_monthly_reset, handle_expiration
+from app.billing.assigns import assign_paid_plan, revert_to_free
+from app.billing.timeutils import now_utc
+
+# Your schemas - FIXED PATH
+from app.models.schemas import UserOut, ImageOut, UserCreate, Token
+
+# Configuration
+from app.config import settings
 import cloudinary.uploader
 import cloudinary.api
 
-from app.config import settings
-from app.database import Base, engine, get_db
-from app.models.user import User
-from app.models.image import Image
-from app.models.schemas import UserCreate, UserOut, ImageOut
-from app.auth.security import hash_password, create_access_token, oauth2_scheme
-from app.auth.google_oauth import oauth
-from app.billing.scheduler import start_scheduler
-from app.billing.enforce import ensure_credits_or_admin
 
-# Create DB tables (dev convenience). Use Alembic in production.
-Base.metadata.create_all(bind=engine)
-
+# Lifespan events
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    start_scheduler()
-    print("Scheduler Started!")
+    # Startup
+    print("🚀 SSnapify starting up...")
+    
+    # Create database tables
+    models.Base.metadata.create_all(bind=engine)
+    print("✅ Database tables created")
+    
+    # Test Redis connection
+    if redis_service.ping():
+        print("✅ Redis connected successfully")
+    else:
+        print("⚠️ Redis connection failed. Token blacklisting will not work.")
+    
+    # Test Cloudinary connection
     try:
-        yield
-    finally:
-        print("Scheduler Stopped")
+        
+        cloudinary.api.ping()
+        print("✅ Cloudinary connected successfully")
+    except Exception as e:
+        print(f"⚠️ Cloudinary connection failed: {e}")
+    
+    # Start background billing scheduler
+    start_scheduler()
+    print("✅ Background billing scheduler started")
+    
+    yield
+    
+    # Shutdown
+    print("🛑 SSnapify shutting down...")
 
-app = FastAPI(lifespan=lifespan)
-app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
+# FastAPI app with lifespan - CREATE ONLY ONCE
+app = FastAPI(
+    title="SSnapify API",
+    description="AI-powered image enhancement and transformation service",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
-# Mount static assets so HTML can load /config.js, /theme.js, /assets/logo.svg etc.
+# ✅ CRITICAL: SessionMiddleware MUST be added FIRST
+app.add_middleware(
+    SessionMiddleware, 
+    secret_key=settings.secret_key,  # Using existing secret_key
+    max_age=60 * 60 * 24 * 7  # 1 week session
+)
+
+# ✅ CORS middleware AFTER SessionMiddleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Static file mounts
 app.mount("/static", StaticFiles(directory="public"), name="static")
 app.mount("/styles", StaticFiles(directory="public/styles"), name="styles")
 app.mount("/js", StaticFiles(directory="public/js"), name="js")
 app.mount("/assets", StaticFiles(directory="public/assets"), name="assets")
+app.mount("/tools", StaticFiles(directory="public/tools"), name="tools")
 
-@app.get("/")
-def root():
-    return RedirectResponse(url="/static/index.html")
 
-# --------------------- MODELS ---------------------
-class AdminRoleUpdate(BaseModel):
-    make_admin: bool
+# API Routers
+auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
+images_router = APIRouter(prefix="/images", tags=["Images"])
+account_router = APIRouter(prefix="/account", tags=["Account"])
+admin_router = APIRouter(prefix="/admin", tags=["Admin"])
+support_router = APIRouter(prefix="/support", tags=["Support"])
+health_router = APIRouter(prefix="/health", tags=["Health"])
 
-class UserStatusUpdate(BaseModel):
-    is_active: bool
+# ============================================================================
+# AUTHENTICATION ROUTES
+# ============================================================================
 
-class CreditUpdate(BaseModel):
-    credits: int = Field(ge=0)
-
-class AuthResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    user: UserOut
-
-class TicketIn(BaseModel):
-    name: str
-    subject: str
-    message: str
-
-# --------------------- DEPENDENCIES ---------------------
-def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> User:
-    try:
-        payload = jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
-        user_id = payload.get("sub")
-        if not user_id:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token payload")
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
-
-    user = db.query(User).filter(User.id == int(user_id)).first()
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
-    if not user.is_active:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User inactive")
-    return user
-
-def require_admin(current_user: User = Depends(get_current_user)) -> User:
-    if not current_user.is_admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
-    return current_user
-
-# --------------------- ROUTERS ---------------------
-auth_router = APIRouter(prefix="/auth", tags=["auth"])
-users_router = APIRouter(prefix="/users", tags=["users"])
-admin_router = APIRouter(prefix="/admin", tags=["admin"])
-support_router = APIRouter(prefix="/support", tags=["support"])
-
-# --------------------- AUTH ---------------------
 @auth_router.get("/google/login")
 async def google_login(request: Request):
-    redirect_url = request.url_for("auth_google_callback")
-    return await oauth.google.authorize_redirect(request, redirect_url)
+    """Initiate Google OAuth login"""
+    redirect_uri = request.url_for("google_callback")
+    return await oauth.google.authorize_redirect(request, redirect_uri)
 
-FRONTEND_AFTER_LOGIN = "http://localhost:8000/static/dashboard.html"
+@auth_router.get("/google/callback")
+async def google_callback(request: Request, db: Session = Depends(get_db)):
+    """Handle Google OAuth callback"""
+    try:
+        token = await oauth.google.authorize_access_token(request)
+        user_info = token.get('userinfo')
+        
+        if not user_info:
+            raise HTTPException(status_code=400, detail="Failed to get user info from Google")
+        
+        # Check if user exists
+        user = db.query(User).filter(User.email == user_info['email']).first()
+        
+        if not user:
+            # Create new user with proper billing setup
+            user = User(
+                email=user_info['email'],
+                username=user_info.get('name', user_info['email'].split('@')[0]),
+                hashed_password="",  # Google OAuth users don't have passwords
+                is_active=True,
+                is_admin=False,
+                plan_id=FREE_PLAN_ID,
+                credit_balance=PLANS[FREE_PLAN_ID].monthly_credits,
+                last_credit_reset_at=now_utc()
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        else:
+            # Apply any pending resets/expirations for existing user
+            current_utc = now_utc()
+            changed = False
+            
+            if handle_expiration(user, current_utc):
+                changed = True
+            if apply_monthly_reset(user, current_utc):
+                changed = True
+            if changed:
+                db.commit()
+        
+        # Create access token
+        access_token = create_access_token(data={"sub": str(user.id)})
+        
+        # Redirect to frontend with token
+        redirect_url = f"/static/login.html?token={access_token}"
+        return RedirectResponse(url=redirect_url)
+        
+    except Exception as e:
+        print(f"Google callback error: {e}")
+        return RedirectResponse(url="/static/login.html?error=auth_failed")
 
-@auth_router.get("/google/callback", name="auth_google_callback")
-async def auth_google_callback(request: Request, db: Session = Depends(get_db)):
-    token = await oauth.google.authorize_access_token(request)
-    userinfo = token.get("userinfo")
-    if not userinfo:
-        raise HTTPException(status_code=400, detail="Failed to retrieve user info from Google")
+@auth_router.post("/logout")
+def logout(current_user: User = Depends(get_current_user), token: str = Depends(oauth2_scheme)):
+    """Logout user and blacklist current token"""
+    try:
+        success = redis_service.blacklist_token(token, settings.access_token_expire_minutes)
+        
+        if not success:
+            return {
+                "ok": True,
+                "message": "Logged out (client-side only)",
+                "warning": "Server-side token invalidation unavailable"
+            }
+        
+        return {
+            "ok": True,
+            "message": "Successfully logged out",
+            "user_id": current_user.id
+        }
+        
+    except Exception as e:
+        print(f"Logout error: {e}")
+        return {
+            "ok": True,
+            "message": "Logged out (client-side only)",
+            "error": "Server-side logout failed"
+        }
 
-    email: Optional[str] = userinfo.get("email")
-    if not email:
-        raise HTTPException(status_code=400, detail="Google account missing email")
+@auth_router.post("/logout-all-devices")
+def logout_all_devices(current_user: User = Depends(get_current_user)):
+    """Logout user from all devices"""
+    try:
+        success = redis_service.blacklist_all_user_tokens(str(current_user.id))
+        
+        if not success:
+            raise HTTPException(status_code=500, detail="Failed to logout from all devices")
+        
+        return {
+            "ok": True,
+            "message": "Successfully logged out from all devices",
+            "user_id": current_user.id
+        }
+        
+    except Exception as e:
+        print(f"Logout all devices error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to logout from all devices")
 
-    username = userinfo.get("name") or email.split("@")[0]
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        user = User(
-            email=email,
-            username=username,
-            hashed_password="google_oauth_no_password",
-            credit_balance=10,
-            is_active=True,
-            is_admin=False,
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+# ============================================================================
+# USER ROUTES
+# ============================================================================
 
-    access_token = create_access_token(data={"sub": str(user.id)})
-    return RedirectResponse(f"{FRONTEND_AFTER_LOGIN}?token={access_token}")
-
-@auth_router.post("/logout", status_code=200)
-def logout_notice():
-    return {"ok": True, "message": "Logged out. Please clear client token."}
-
-# --------------------- USERS ---------------------
-@users_router.post("", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def create_user(userdata: UserCreate, db: Session = Depends(get_db)):
-    if db.query(User).filter(User.email == userdata.email).first():
-        raise HTTPException(status_code=400, detail="Email already registered")
-    if db.query(User).filter(User.username == userdata.username).first():
-        raise HTTPException(status_code=400, detail="Username already registered")
-    hashed_password = hash_password(userdata.password)
-    new_user = User(email=userdata.email, username=userdata.username, hashed_password=hashed_password)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
-
-@users_router.get("", response_model=List[UserOut])
-def list_users(db: Session = Depends(get_db), current_admin: User = Depends(require_admin)):
-    return db.query(User).order_by(User.id.asc()).all()
-
-@users_router.get("/me", response_model=UserOut)
-def read_me(current_user: User = Depends(get_current_user)):
+@app.get("/users/me", response_model=UserOut)
+def get_current_user_info(current_user: User = Depends(get_current_user)):
+    """Get current user information"""
     return current_user
 
-@app.get("/account/credits")
-def get_credits_info(current_user: User = Depends(get_current_user)):
-    now = datetime.now(timezone.utc)
-    if current_user.plan_id == 1:
-        from app.billing.timeutils import start_of_utc_month, add_calendar_months
-        current_cycle_start = start_of_utc_month(now)
-        next_cycle_start = add_calendar_months(current_cycle_start, 1)
-        days_remaining = (next_cycle_start - now).days
-        billing_cycle_ends = None
-        next_reset_time = next_cycle_start
-    else:
+@app.get("/users", response_model=List[UserOut])
+def get_all_users(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get all users (admin only)"""
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    users = db.query(User).all()
+    return users
+
+# ============================================================================
+# IMAGES ROUTES
+# ============================================================================
+
+@images_router.post("/", response_model=ImageOut)
+async def upload_image(
+    file: UploadFile = File(...),
+    title: str = Form(None),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Upload an image"""
+    try:
+        # Validate file type
+        if not file.content_type.startswith('image/'):
+            raise HTTPException(status_code=400, detail="File must be an image")
+        
+        
+        
+        # Read file content
+        file_content = await file.read()
+        
+        # Upload to Cloudinary
+        upload_result = cloudinary.uploader.upload(
+            file_content,
+            public_id=f"user_{current_user.id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+            folder="ssnapify/originals",
+            resource_type="image"
+        )
+        
+        # Save to database using your Image model
+        image = Image(
+            user_id=current_user.id,
+            public_id=upload_result['public_id'],
+            secure_url=upload_result['secure_url'],
+            title=title or file.filename,
+            transformation_type=None,  # Original image
+            config=None
+        )
+        
+        db.add(image)
+        db.commit()
+        db.refresh(image)
+        
+        return image
+        
+    except Exception as e:
+        print(f"Upload error: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+@images_router.get("/", response_model=List[ImageOut])
+def get_user_images(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(100, ge=1, le=100),
+    from_date: Optional[str] = Query(None),
+    to_date: Optional[str] = Query(None)
+):
+    """Get user's images with optional date filtering"""
+    query = db.query(Image).filter(Image.user_id == current_user.id)
+    
+    # Apply date filters if provided
+    if from_date:
+        try:
+            from_datetime = datetime.fromisoformat(from_date)
+            query = query.filter(Image.created_at >= from_datetime)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid from_date format")
+    
+    if to_date:
+        try:
+            to_datetime = datetime.fromisoformat(to_date)
+            query = query.filter(Image.created_at <= to_datetime)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid to_date format")
+    
+    images = query.order_by(Image.created_at.desc()).offset(skip).limit(limit).all()
+    return images
+
+@images_router.get("/{image_id}", response_model=ImageOut)
+def get_image(
+    image_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get a specific image"""
+    image = db.query(Image).filter(
+        Image.id == image_id,
+        Image.user_id == current_user.id
+    ).first()
+    
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    return image
+
+@images_router.delete("/{image_id}")
+def delete_image(
+    image_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete an image"""
+    image = db.query(Image).filter(
+        Image.id == image_id,
+        Image.user_id == current_user.id
+    ).first()
+    
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    try:
+        # Delete from Cloudinary
+        import cloudinary.uploader
+        cloudinary.uploader.destroy(image.public_id)
+        
+        # Delete from database
+        db.delete(image)
+        db.commit()
+        
+        return {"message": "Image deleted successfully"}
+        
+    except Exception as e:
+        print(f"Delete error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to delete image")
+
+# Image transformation routes with your billing system
+@images_router.post("/{image_id}/restore")
+async def restore_image(
+    image_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Restore an image using AI"""
+    return await apply_transformation(image_id, "restore", current_user, db, cost=1)
+
+@images_router.post("/{image_id}/remove_bg")
+async def remove_background(
+    image_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Remove background from an image"""
+    return await apply_transformation(image_id, "remove_bg", current_user, db, cost=1)
+
+@images_router.post("/{image_id}/remove_obj")
+async def remove_object(
+    image_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Remove objects from an image"""
+    return await apply_transformation(image_id, "remove_obj", current_user, db, cost=1)
+
+@images_router.post("/{image_id}/enhance")
+async def enhance_image(
+    image_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Enhance image quality"""
+    return await apply_transformation(image_id, "enhance", current_user, db, cost=1)
+
+@images_router.post("/{image_id}/generative_fill")
+async def generative_fill(
+    image_id: int,
+    prompt: str = Query(..., description="Description for generative fill"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Apply generative fill to an image"""
+    return await apply_transformation(image_id, "generative_fill", current_user, db, cost=3, prompt=prompt)
+
+@images_router.post("/{image_id}/replace_bg")
+async def replace_background(
+    image_id: int,
+    prompt: str = Query(..., description="Description for new background"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Replace background with AI-generated content"""
+    return await apply_transformation(image_id, "replace_bg", current_user, db, cost=2, prompt=prompt)
+
+async def apply_transformation(
+    image_id: int,
+    transformation: str,
+    current_user: User,
+    db: Session,
+    cost: int,
+    prompt: str = None
+):
+    """Helper function to apply image transformations using your billing system"""
+    # Get original image
+    image = db.query(Image).filter(
+        Image.id == image_id,
+        Image.user_id == current_user.id
+    ).first()
+    
+    if not image:
+        raise HTTPException(status_code=404, detail="Image not found")
+    
+    # Use your billing enforcement
+    ensure_credits_or_admin(current_user, db, cost)
+    
+    try:
+        # Apply transformation using Cloudinary
+        import cloudinary.uploader
+        
+        # Define transformation parameters based on type
+        transform_params = {
+            "restore": {"effect": "improve"},
+            "remove_bg": {"background_removal": "cloudinary_ai"},
+            "remove_obj": {"effect": "generative_remove"},
+            "enhance": {"effect": "enhance"},
+            "generative_fill": {"effect": "generative_fill", "prompt": prompt} if prompt else {"effect": "generative_fill"},
+            "replace_bg": {"effect": "gen_background_replace", "prompt": prompt} if prompt else {"effect": "gen_background_replace"}
+        }
+        
+        # Apply transformation
+        if transformation in transform_params:
+            transformed_result = cloudinary.uploader.upload(
+                image.secure_url,
+                public_id=f"transformed_{transformation}_{image.public_id}",
+                folder="ssnapify/transformed",
+                transformation=transform_params[transformation]
+            )
+        else:
+            raise HTTPException(status_code=400, detail="Invalid transformation type")
+        
+        # Create new image record for transformed image
+        new_image = Image(
+            user_id=current_user.id,
+            public_id=transformed_result['public_id'],
+            secure_url=transformed_result['secure_url'],
+            title=f"{transformation.replace('_', ' ').title()} - {image.title}",
+            transformation_type=transformation,
+            config={"original_image_id": image.id, "prompt": prompt} if prompt else {"original_image_id": image.id}
+        )
+        
+        db.add(new_image)
+        db.commit()
+        db.refresh(new_image)
+        
+        return new_image
+        
+    except Exception as e:
+        print(f"Transformation error: {e}")
+        # Rollback credit deduction if transformation failed
+        current_user.credit_balance += cost
+        db.commit()
+        raise HTTPException(status_code=500, detail=f"Transformation failed: {str(e)}")
+
+# ============================================================================
+# ACCOUNT ROUTES
+# ============================================================================
+
+@account_router.get("/credits")
+def get_user_credits(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get user's credit information using your billing system"""
+    # Apply any pending resets/expirations
+    current_utc = now_utc()
+    changed = False
+    
+    if handle_expiration(current_user, current_utc):
+        changed = True
+    if apply_monthly_reset(current_user, current_utc):
+        changed = True
+    if changed:
+        db.commit()
+    
+    # Calculate days until next reset
+    plan_spec = PLANS.get(current_user.plan_id, PLANS[FREE_PLAN_ID])
+    days_until_reset = 30  # Default
+    
+    if current_user.billing_anchor_utc and current_user.plan_id != FREE_PLAN_ID:
+        # Calculate based on billing anchor for paid plans
         from app.billing.resets import compute_paid_cycle_start
         from app.billing.timeutils import add_calendar_months
-        anchor = current_user.billing_anchor_utc or now
-        current_cycle_start = compute_paid_cycle_start(anchor, now)
-        next_cycle_start = add_calendar_months(current_cycle_start, 1)
-        days_remaining = (next_cycle_start - now).days
-        billing_cycle_ends = current_user.plan_expires_at
-        next_reset_time = next_cycle_start
-
+        cycle_start = compute_paid_cycle_start(current_user.billing_anchor_utc, current_utc)
+        next_cycle = add_calendar_months(cycle_start, 1)
+        days_until_reset = (next_cycle - current_utc).days
+    else:
+        # Free plan - calculate until next month
+        from app.billing.timeutils import start_of_utc_month, add_calendar_months
+        current_month_start = start_of_utc_month(current_utc)
+        next_month_start = add_calendar_months(current_month_start, 1)
+        days_until_reset = (next_month_start - current_utc).days
+    
     return {
         "credit_balance": current_user.credit_balance,
         "plan_id": current_user.plan_id,
-        "days_until_next_reset": max(days_remaining, 0),
-        "billing_cycle_ends": billing_cycle_ends,
-        "next_reset_time": next_reset_time,
+        "plan_name": ["Unknown", "Free", "Pro Monthly", "Pro 6-Months"][current_user.plan_id] if current_user.plan_id <= 3 else "Unknown",
+        "days_until_next_reset": max(0, days_until_reset),
+        "billing_cycle_ends": current_user.plan_expires_at
     }
 
-# --------------------- ADMIN ---------------------
-@admin_router.post("/users/{user_id}/role")
-def set_admin_role(user_id: int, update: AdminRoleUpdate, db: Session = Depends(get_db), current_admin: User = Depends(require_admin)):
+# ============================================================================
+# ADMIN ROUTES
+# ============================================================================
+
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    """Dependency to require admin access"""
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return current_user
+
+@admin_router.post("/users/{user_id}/credits")
+def update_user_credits(
+    user_id: int,
+    credits: int = Query(..., ge=0),
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Update user's credits (admin only)"""
     user = db.query(User).filter(User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    user.is_admin = bool(update.make_admin)
+    
+    user.credit_balance = credits
     db.commit()
-    db.refresh(user)
-    return {"message": "Role updated", "user_id": user.id, "is_admin": user.is_admin}
+    
+    return {"message": f"Updated user {user_id} credits to {credits}"}
 
-# ... keep your other admin routes here with cleaned syntax ...
+@admin_router.post("/users/{user_id}/role")
+def update_user_role(
+    user_id: int,
+    make_admin: bool = Query(...),
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Update user's admin status (admin only)"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.is_admin = make_admin
+    db.commit()
+    
+    return {"message": f"User {user_id} admin status updated to {make_admin}"}
 
-# --------------------- IMAGE ROUTES ---------------------
-# ... keep existing logic here exactly, just ensure all try/except, return, db.commit() blocks are closed properly like above ...
+@admin_router.post("/users/{user_id}/status")
+def update_user_status(
+    user_id: int,
+    is_active: bool = Query(...),
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Update user's active status (admin only)"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.is_active = is_active
+    db.commit()
+    
+    return {"message": f"User {user_id} active status updated to {is_active}"}
 
-# --------------------- SUPPORT ---------------------
-@support_router.post("/ticket", status_code=200)
-def create_ticket(data: TicketIn, current_user: Optional[User] = Depends(get_current_user)):
-    user_email = getattr(current_user, "email", None) if current_user else None
-    email_subject = f"Support Ticket: {data.subject}"
-    email_body = f"""From: {data.name}
-User Email: {user_email or "anonymous/guest"}
-Subject: {data.subject}
+@admin_router.post("/users/{user_id}/logout-force")
+def force_logout_user(
+    user_id: int,
+    admin_user: User = Depends(require_admin)
+):
+    """Force logout a user from all devices (admin only)"""
+    try:
+        success = redis_service.blacklist_all_user_tokens(str(user_id))
+        if success:
+            return {"message": f"User {user_id} logged out from all devices"}
+        else:
+            raise HTTPException(500, "Failed to logout user")
+    except Exception as e:
+        raise HTTPException(500, f"Error: {str(e)}")
 
-Message:
-{data.message}"""
-    # TODO: send email
-    return {"ok": True}
+@admin_router.post("/users/{user_id}/plan")
+def update_user_plan(
+    user_id: int,
+    plan_id: int = Query(..., ge=1, le=3),
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Update user's plan (admin only)"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    try:
+        if plan_id == FREE_PLAN_ID:
+            revert_to_free(user)
+        else:
+            assign_paid_plan(user, plan_id)
+        
+        db.commit()
+        return {"message": f"User {user_id} plan updated to {plan_id}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to update plan: {str(e)}")
 
-# --------------------- REGISTER ROUTERS ---------------------
+# ============================================================================
+# SUPPORT ROUTES
+# ============================================================================
+
+@support_router.post("/ticket")
+async def create_support_ticket(
+    name: str = Form(...),
+    subject: str = Form(...),
+    message: str = Form(...),
+    current_user: User = Depends(get_current_user)
+):
+    """Create a support ticket"""
+    try:
+        # For now, just log the ticket (you can add database storage later)
+        print(f"Support ticket from {current_user.email}:")
+        print(f"Name: {name}")
+        print(f"Subject: {subject}")
+        print(f"Message: {message}")
+        
+        return {"message": "Support ticket created successfully"}
+        
+    except Exception as e:
+        print(f"Support ticket error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create support ticket")
+
+# ============================================================================
+# HEALTH ROUTES
+# ============================================================================
+
+@health_router.get("/redis")
+def redis_health():
+    """Check Redis connection health"""
+    if redis_service.ping():
+        return {"status": "healthy", "redis": "connected"}
+    else:
+        return {"status": "unhealthy", "redis": "disconnected"}
+
+@health_router.get("/cloudinary")
+def cloudinary_health():
+    """Check Cloudinary connection health"""
+    try:
+        import cloudinary.api
+        cloudinary.api.ping()
+        return {"status": "healthy", "cloudinary": "connected"}
+    except Exception as e:
+        return {"status": "unhealthy", "cloudinary": "disconnected", "error": str(e)}
+
+@health_router.get("/")
+def health_check():
+    """General health check"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "version": "1.0.0"
+    }
+
+# ============================================================================
+# STATIC ROUTES
+# ============================================================================
+
+@app.get("/")
+def root():
+    """Redirect to index page"""
+    return RedirectResponse(url="/static/index.html")
+
+@app.get("/{filename}")
+def serve_html_pages(filename: str):
+    """Serve HTML files directly"""
+    if filename.endswith('.html'):
+        file_path = f"public/{filename}"
+        if os.path.exists(file_path):
+            return FileResponse(file_path)
+    raise HTTPException(status_code=404, detail="Page not found")
+
+# Add test route for SessionMiddleware
+@app.get("/test-session")
+async def test_session(request: Request):
+    """Test route to verify SessionMiddleware works"""
+    try:
+        session = request.session
+        session["test"] = session.get("test", 0) + 1
+        return {"session_count": session["test"], "message": "SessionMiddleware is working!"}
+    except Exception as e:
+        return {"error": f"SessionMiddleware not working: {str(e)}"}
+
+# Register all routers
 app.include_router(auth_router)
-app.include_router(users_router)
+app.include_router(images_router)
+app.include_router(account_router)
 app.include_router(admin_router)
 app.include_router(support_router)
+app.include_router(health_router)
+
+# ============================================================================
+# FIXED ERROR HANDLERS (ONLY ONCE)
+# ============================================================================
+
+@app.exception_handler(404)
+async def custom_404_handler(request: Request, exc):
+    """Custom 404 handler - Returns proper Response"""
+    try:
+        return FileResponse("public/404.html", status_code=404)
+    except FileNotFoundError:
+        return JSONResponse(
+            status_code=404,
+            content={"error": "Page not found", "detail": "The requested resource was not found"}
+        )
+
+@app.exception_handler(500)
+async def custom_500_handler(request: Request, exc):
+    """Custom 500 handler - Returns JSONResponse, NOT dict"""
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal server error", "detail": str(exc)}
+    )
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=True,
+        log_level="info"
+    )

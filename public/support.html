@@ -4,24 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Support - SSnapify</title>
-    <!-- Updated CSS References -->
     <link rel="stylesheet" href="/styles/base.css">
+    <link rel="stylesheet" href="/styles/layout.css">
     <link rel="stylesheet" href="/styles/components.css">
-    <link rel="stylesheet" href="/styles/animation.css">
+    <link rel="stylesheet" href="/styles/theme.css">
     <link rel="stylesheet" href="/styles/support.css">
-    <link rel="icon" href="/assets/favicon.ico">
+    <link rel="stylesheet" href="/styles/animations.css">
+    <link rel="stylesheet" href="/styles/responsive.css">
+    <script src="/js/auth.js"></script>
+    <link rel="stylesheet" href="/styles/components.css">
+
 </head>
 <body>
-    <nav class="navbar glass-effect">
+    <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <img src="/assets/logo.png" alt="SSnapify" class="logo">
-                <span class="brand-text">SSnapify</span>
+                <img src="/assets/images/logo.png" alt="SSnapify" class="nav-logo">
+                <span class="nav-title">SSnapify</span>
             </div>
-            <div class="nav-links">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="dashboard.html" class="nav-link">Dashboard</a>
-                <a href="pricing.html" class="nav-link">Pricing</a>
+            <div class="nav-menu">
+                <a href="/index.html" class="nav-link">Home</a>
+                <a href="/dashboard.html" class="nav-link">Dashboard</a>
+                <a href="/gallery.html" class="nav-link">Gallery</a>
+                <a href="/pricing.html" class="nav-link">Billing</a>
+                <div class="nav-user" id="navUser">
+                    <span class="user-credits" id="userCredits">Loading...</span>
+                    <div class="user-dropdown">
+                        <button class="user-avatar" id="userAvatar">
+                            <span id="userName">Loading...</span>
+                        </button>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <a href="/dashboard.html" class="dropdown-item">Dashboard</a>
+                            <a href="/gallery.html" class="dropdown-item">Gallery</a>
+                            <a href="/pricing.html" class="dropdown-item">Billing</a>
+                            <a href="/support.html" class="dropdown-item active">Support</a>
+                            <div class="admin-section hidden" id="adminSection">
+                                <div class="dropdown-divider"></div>
+                                <a href="/admin.html" class="dropdown-item">Admin Panel</a>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="nav-auth hidden" id="navAuth">
+                    <a href="/login.html" class="btn btn-outline">Login</a>
+                </div>
             </div>
             <button class="theme-toggle" id="themeToggle">🌙</button>
         </div>
@@ -30,65 +58,163 @@
     <main class="support-main">
         <div class="support-container">
             <div class="support-header">
-                <h1>Get Support</h1>
-                <p>We're here to help! Send us your questions or feedback.</p>
+                <h1 class="support-title">Help & Support</h1>
+                <p class="support-subtitle">Get help with SSnapify or contact our support team</p>
             </div>
 
             <div class="support-content">
-                <form id="supportForm" class="support-form glass-effect">
-                    <div class="form-group">
-                        <label for="name">Name *</label>
-                        <input type="text" id="name" name="name" class="input" required>
-                        <div id="nameError" class="error-message"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="subject">Subject *</label>
-                        <input type="text" id="subject" name="subject" class="input" required>
-                        <div id="subjectError" class="error-message"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="message">Message *</label>
-                        <textarea id="message" name="message" class="textarea" rows="6" maxlength="1000" required></textarea>
-                        <div class="character-counter">
-                            <span id="messageCounter">0/1000 characters</span>
+                <!-- FAQ Section -->
+                <div class="faq-section">
+                    <h2 class="section-title">Frequently Asked Questions</h2>
+                    <div class="faq-list">
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                How do credits work?
+                                <span class="faq-icon">+</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Credits are used to perform AI transformations on your images. Different tools consume different amounts of credits:</p>
+                                <ul>
+                                    <li>AI Restore, Background Removal, Object Removal, Enhancement: 1 credit each</li>
+                                    <li>Background Replacement: 2 credits</li>
+                                    <li>Generative Fill: 3 credits</li>
+                                </ul>
+                                <p>Credits reset monthly on your billing date.</p>
+                            </div>
                         </div>
-                        <div id="messageError" class="error-message"></div>
+
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                What image formats are supported?
+                                <span class="faq-icon">+</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>We support all major image formats including:</p>
+                                <ul>
+                                    <li>JPEG (.jpg, .jpeg)</li>
+                                    <li>PNG (.png)</li>
+                                    <li>GIF (.gif)</li>
+                                    <li>WebP (.webp)</li>
+                                </ul>
+                                <p>Maximum file size is 10MB per image.</p>
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                How can I upgrade my plan?
+                                <span class="faq-icon">+</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>You can upgrade your plan anytime from the Pricing page. Choose between:</p>
+                                <ul>
+                                    <li>Pro Monthly: $9.99/month for 500 credits</li>
+                                    <li>Pro 6-Month: $49.99/6 months for 500 credits per month (17% savings)</li>
+                                </ul>
+                                <p>Upgrades are effective immediately and unused credits carry over.</p>
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                Is my data safe and private?
+                                <span class="faq-icon">+</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Yes! We take your privacy seriously:</p>
+                                <ul>
+                                    <li>Images are processed securely using Cloudinary's infrastructure</li>
+                                    <li>We don't share your images with third parties</li>
+                                    <li>You can delete your images anytime</li>
+                                    <li>We use Google OAuth for secure authentication</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="faq-item">
+                            <button class="faq-question">
+                                How long does processing take?
+                                <span class="faq-icon">+</span>
+                            </button>
+                            <div class="faq-answer">
+                                <p>Processing times vary by transformation type:</p>
+                                <ul>
+                                    <li>Basic enhancements: 5-15 seconds</li>
+                                    <li>Background removal/replacement: 10-30 seconds</li>
+                                    <li>Generative fill: 30-60 seconds</li>
+                                </ul>
+                                <p>Processing may take longer during peak usage times.</p>
+                            </div>
+                        </div>
                     </div>
+                </div>
 
-                    <button type="submit" id="submitTicket" class="btn btn-primary btn-lg">
-                        Send Message
-                    </button>
-                </form>
+                <!-- Contact Form -->
+                <div class="contact-section">
+                    <h2 class="section-title">Contact Support</h2>
+                    <div class="contact-content">
+                        <div class="contact-info">
+                            <h3>Get in Touch</h3>
+                            <p>Can't find what you're looking for? Send us a message and we'll get back to you within 24 hours.</p>
+                            <div class="contact-methods">
+                                <div class="contact-method">
+                                    <div class="method-icon">📧</div>
+                                    <div class="method-info">
+                                        <strong>Email Support</strong>
+                                        <span>support@ssnapify.com</span>
+                                    </div>
+                                </div>
+                                <div class="contact-method">
+                                    <div class="method-icon">⏰</div>
+                                    <div class="method-info">
+                                        <strong>Response Time</strong>
+                                        <span>Within 24 hours</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
-                <div class="support-info">
-                    <div class="info-card glass-effect">
-                        <h3>📧 Email Support</h3>
-                        <p>For urgent matters, email us directly at support@ssnapify.com</p>
-                    </div>
+                        <form class="contact-form" id="contactForm">
+                            <div class="form-group">
+                                <label for="contactName" class="form-label">Name</label>
+                                <input type="text" id="contactName" name="name" class="form-input" required>
+                            </div>
 
-                    <div class="info-card glass-effect">
-                        <h3>❓ FAQ</h3>
-                        <p>Check our frequently asked questions for quick answers</p>
-                    </div>
+                            <div class="form-group">
+                                <label for="contactSubject" class="form-label">Subject</label>
+                                <select id="contactSubject" name="subject" class="form-select" required>
+                                    <option value="">Select a topic</option>
+                                    <option value="technical">Technical Issue</option>
+                                    <option value="billing">Billing Question</option>
+                                    <option value="feature">Feature Request</option>
+                                    <option value="account">Account Issue</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
 
-                    <div class="info-card glass-effect">
-                        <h3>⏰ Response Time</h3>
-                        <p>We typically respond within 24 hours during business days</p>
+                            <div class="form-group">
+                                <label for="contactMessage" class="form-label">Message</label>
+                                <textarea id="contactMessage" name="message" class="form-textarea" rows="5" required placeholder="Please describe your issue or question in detail..."></textarea>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary" id="submitBtn">
+                                    <span class="btn-text">Send Message</span>
+                                    <span class="btn-loading hidden">Sending...</span>
+                                </button>
+                            </div>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Updated Script References -->
-    <script type="module" src="/js/config.js"></script>
-    <script type="module" src="/js/api.js"></script>
-    <script type="module" src="/js/theme.js"></script>
-    <script type="module" src="/js/utils.js"></script>
-    <script type="module" src="/js/support.js"></script>
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/support.js"></script>
+    
 </body>
 </html>

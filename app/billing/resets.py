@@ -8,7 +8,6 @@ def compute_paid_cycle_start(anchor_utc: datetime, current_utc: datetime):
     # If no anchor, fall back to calendar month start
     if anchor_utc is None:
         return start_of_utc_month(current_utc)
-    
     cycle_start = anchor_utc
     # Advance by months until next boundary is in the future
     while True:
@@ -16,7 +15,6 @@ def compute_paid_cycle_start(anchor_utc: datetime, current_utc: datetime):
         if next_boundary > current_utc:
             return cycle_start
         cycle_start = next_boundary
-
 
 def is_reset_due_free(user: User, current_utc: datetime):
     cycle_start = start_of_utc_month(current_utc)
@@ -41,7 +39,6 @@ def handle_expiration(user: User, current_utc: datetime) -> bool:
 
 def apply_monthly_reset(user: User, current_utc: datetime) -> bool:
     spec = PLANS.get(user.plan_id, PLANS[FREE_PLAN_ID])
-
     if user.plan_id == FREE_PLAN_ID:
         due, cycle_start = is_reset_due_free(user, current_utc)
     else:

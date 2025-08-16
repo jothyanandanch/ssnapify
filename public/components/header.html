@@ -1,0 +1,24 @@
+<header class="main-header">
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="/static/index.html">
+                <img src="/assets/images/logo.png" alt="SSnapify" class="logo">
+                SSnapify
+            </a>
+        </div>
+        <div class="nav-menu">
+            <a href="/static/index.html" class="nav-link">Home</a>
+            <a href="/static/dashboard.html" class="nav-link auth-required" style="display:none;">Dashboard</a>
+            <a href="/static/gallery.html" class="nav-link auth-required" style="display:none;">Gallery</a>
+            <a href="/static/pricing.html" class="nav-link">Pricing</a>
+            <a href="/static/support.html" class="nav-link">Support</a>
+        </div>
+        <div class="nav-auth">
+            <a href="/auth/google/login" id="btn-login" class="btn btn-primary">Login with Google</a>
+            <div id="user-menu" class="user-menu" style="display:none;">
+                <span id="user-name" class="user-name"></span>
+                <button id="btn-logout" class="btn btn-secondary">Logout</button>
+            </div>
+        </div>
+    </nav>
+</header>

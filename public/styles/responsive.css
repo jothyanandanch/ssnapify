@@ -1,0 +1,394 @@
+/* Responsive Design Styles */
+
+/* Mobile First Approach */
+/* Base styles are mobile-first, then we add desktop styles */
+
+/* Small devices (landscape phones, 576px and up) */
+@media (min-width: 576px) {
+    .container {
+        padding: 0 1.5rem;
+    }
+}
+
+/* Medium devices (tablets, 768px and up) */
+@media (max-width: 768px) {
+    /* Navigation */
+    .nav-container {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .nav-menu {
+        flex-direction: column;
+        width: 100%;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .nav-user {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    /* Hero Section */
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .hero-actions {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    /* Tools Grid */
+    .tools-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Stats */
+    .stats-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Dashboard */
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-header {
+        text-align: left;
+    }
+    
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Gallery */
+    .gallery-header {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+    }
+    
+    .gallery-controls {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Upload */
+    .upload-zone {
+        padding: 2rem 1rem;
+    }
+    
+    .upload-text {
+        font-size: 1.25rem;
+    }
+    
+    .queue-item {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .queue-preview-container {
+        width: 100px;
+        height: 100px;
+    }
+    
+    /* Pricing */
+    .current-plan-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .plans-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .plan-card.featured {
+        transform: none;
+    }
+    
+    /* Support */
+    .contact-content {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Admin */
+    .health-grid,
+    .actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    /* Modal */
+    .modal-content {
+        margin: 1rem;
+        max-width: calc(100% - 2rem);
+    }
+    
+    /* Forms */
+    .form-group {
+        flex-direction: column;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    /* Tables */
+    .users-table-container {
+        font-size: 0.875rem;
+    }
+    
+    .users-table th,
+    .users-table td {
+        padding: 0.5rem;
+    }
+    
+    /* Tool pages */
+    .tool-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .tool-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+}
+
+/* Small devices (portrait phones, 576px and down) */
+@media (max-width: 576px) {
+    .container {
+        padding: 0 1rem;
+    }
+    
+    /* Typography */
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .dashboard-title {
+        font-size: 2rem;
+    }
+    
+    .gallery-title,
+    .pricing-title,
+    .support-title,
+    .admin-title {
+        font-size: 1.5rem;
+    }
+    
+    /* Stats */
+    .stats-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    /* Gallery */
+    .gallery-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Upload */
+    .upload-icon {
+        font-size: 3rem;
+    }
+    
+    .upload-text {
+        font-size: 1.125rem;
+    }
+    
+    /* Pricing */
+    .usage-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .usage-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    /* Admin */
+    .health-grid,
+    .actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .health-card,
+    .action-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    /* Tool cards */
+    .tool-card {
+        min-width: auto;
+    }
+    
+    /* Buttons */
+    .btn-large {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.875rem;
+    }
+}
+
+/* Large devices (desktops, 992px and up) */
+@media (min-width: 992px) {
+    .container {
+        padding: 0 2rem;
+    }
+    
+    /* Navigation */
+    .nav-container {
+        padding: 0 3rem;
+    }
+    
+    /* Hero */
+    .hero-container {
+        padding: 0 3rem;
+    }
+    
+    /* Grid improvements */
+    .tools-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .dashboard-stats {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .gallery-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .plans-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Extra large devices (large desktops, 1200px and up) */
+@media (min-width: 1200px) {
+    .gallery-grid {
+        grid-template-columns: repeat(5, 1fr);
+    }
+    
+    .tools-grid {
+        grid-template-columns: repeat(3, 1fr);
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+}
+
+/* Landscape orientation for mobile devices */
+@media (max-height: 500px) and (orientation: landscape) {
+    .hero {
+        padding: 3rem 0 2rem;
+    }
+    
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .upload-zone {
+        padding: 2rem 1rem;
+    }
+    
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* Print styles */
+@media print {
+    .navbar,
+    .footer,
+    .btn,
+    .modal,
+    .toast-container {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    * {
+        box-shadow: none !important;
+        text-shadow: none !important;
+    }
+    
+    body {
+        background: white !important;
+        color: black !important;
+    }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --border-color: #000000;
+        --text-secondary: #000000;
+        --bg-secondary: #ffffff;
+    }
+    
+    [data-theme="dark"] {
+        --border-color: #ffffff;
+        --text-secondary: #ffffff;
+        --bg-secondary: #000000;
+    }
+}
+
+/* Reduced data mode */
+@media (prefers-reduced-data: reduce) {
+    .hero::before,
+    .login-background,
+    .bg-gradient {
+        display: none;
+    }
+    
+    .loading-spinner {
+        border-style: solid;
+        background: none;
+    }
+}
+
+/* Focus visible support for better accessibility */
+@supports selector(:focus-visible) {
+    *:focus {
+        outline: none;
+    }
+    
+    *:focus-visible {
+        outline: 2px solid var(--primary-color);
+        outline-offset: 2px;
+    }
+}
+
+/* Container queries (progressive enhancement) */
+@supports (container-type: inline-size) {
+    .responsive-container {
+        container-type: inline-size;
+    }
+    
+    @container (max-width: 500px) {
+        .card-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @container (min-width: 500px) {
+        .card-grid {
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        }
+    }
+}

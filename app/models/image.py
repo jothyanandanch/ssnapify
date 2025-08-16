@@ -1,12 +1,11 @@
-from sqlalchemy import Column,Integer,String,DateTime,ForeignKey,JSON
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, JSON
 from sqlalchemy.sql import func
-from app.database import Base
+from app.models.base import Base  # Import from base.py
 
 class Image(Base):
-    __tablename__='images'
-
-    id=Column(Integer,primary_key=True,index=True)
-    user_id=Column(Integer,ForeignKey("users.id"),nullable=False)
+    __tablename__ = 'images'
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     public_id = Column(String, nullable=False)  # Cloudinary ID
     secure_url = Column(String, nullable=False)
     title = Column(String, nullable=True)

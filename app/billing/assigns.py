@@ -1,5 +1,5 @@
-from billing.timeutils import now_utc, add_calendar_months
-from billing.plans import PLANS, FREE_PLAN_ID
+from app.billing.timeutils import now_utc, add_calendar_months
+from app.billing.plans import PLANS, FREE_PLAN_ID
 from app.models.user import User
 
 def assign_paid_plan(user: User, plan_id: int):
@@ -12,7 +12,6 @@ def assign_paid_plan(user: User, plan_id: int):
     user.plan_expires_at = add_calendar_months(now, spec.duration_months)
     user.credit_balance = spec.monthly_credits
     user.last_credit_reset_at = now
-
 
 def revert_to_free(user: User):
     now = now_utc()

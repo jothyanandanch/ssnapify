@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout - SSnapify</title>
+    <link rel="stylesheet" href="/styles/base.css">
+    <link rel="stylesheet" href="/styles/layout.css">
+    <link rel="stylesheet" href="/styles/components.css">
+    <link rel="stylesheet" href="/styles/theme.css">
+    <link rel="stylesheet" href="/styles/login.css">
+    <link rel="stylesheet" href="/styles/animations.css">
+    <link rel="stylesheet" href="/styles/responsive.css">
+    <script src="/js/auth.js"></script>
+    <link rel="stylesheet" href="/styles/components.css">
+
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <img src="/assets/images/logo.png" alt="SSnapify" class="login-logo">
+                <h1 class="login-title">Logging Out</h1>
+                <p class="login-subtitle">Securely ending your session...</p>
+            </div>
+
+            <div class="login-content">
+                <div class="logout-status" id="logoutStatus">
+                    <div class="logout-progress">
+                        <div class="progress-spinner"></div>
+                        <p id="logoutMessage">Invalidating session tokens...</p>
+                    </div>
+                </div>
+
+                <div class="logout-complete hidden" id="logoutComplete">
+                    <div class="success-icon">✅</div>
+                    <h3>Successfully Logged Out</h3>
+                    <p>Your session has been securely terminated.</p>
+                    <div class="logout-options">
+                        <a href="/login.html" class="btn btn-primary">Sign In Again</a>
+                        <a href="/index.html" class="btn btn-outline">Go Home</a>
+                    </div>
+                </div>
+
+                <div class="logout-error hidden" id="logoutError">
+                    <div class="error-icon">⚠️</div>
+                    <h3>Logout Warning</h3>
+                    <p id="errorMessage">Session ended on client-side only. Server-side logout may have failed.</p>
+                    <div class="logout-options">
+                        <a href="/login.html" class="btn btn-primary">Sign In Again</a>
+                        <a href="/index.html" class="btn btn-outline">Go Home</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="login-footer">
+                <p>For security, we recommend closing your browser after logging out from shared computers.</p>
+            </div>
+        </div>
+
+        <div class="login-background">
+            <div class="bg-gradient"></div>
+        </div>
+    </div>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/logout.js"></script>
+    
+</body>
+</html>

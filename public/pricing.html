@@ -3,212 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pricing - SSnapify</title>
-    <!-- Updated CSS References -->
-    <link rel="stylesheet" href="/styles/pricing.css">
+    <title>Pricing & Billing - SSnapify</title>
     <link rel="stylesheet" href="/styles/base.css">
+    <link rel="stylesheet" href="/styles/layout.css">
     <link rel="stylesheet" href="/styles/components.css">
-    <link rel="stylesheet" href="/styles/animation.css">
+    <link rel="stylesheet" href="/styles/theme.css">
     <link rel="stylesheet" href="/styles/pricing.css">
-    <link rel="icon" href="/assets/favicon.ico">
+    <link rel="stylesheet" href="/styles/animations.css">
+    <link rel="stylesheet" href="/styles/responsive.css">
+    <script src="/js/auth.js"></script>
+    <link rel="stylesheet" href="/styles/components.css">
+
 </head>
 <body>
-    <nav class="navbar glass-effect">
+    <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <img src="/assets/logo.png" alt="SSnapify" class="logo">
-                <span class="brand-text">SSnapify</span>
+                <img src="/assets/images/logo.png" alt="SSnapify" class="nav-logo">
+                <span class="nav-title">SSnapify</span>
             </div>
-            <div class="nav-links">
-                <a href="index.html" class="nav-link">Home</a>
-                <a href="dashboard.html" class="nav-link">Dashboard</a>
-                <a href="support.html" class="nav-link">Support</a>
-                <a href="login.html" class="btn btn-primary">Sign In</a>
+            <div class="nav-menu">
+                <a href="/index.html" class="nav-link">Home</a>
+                <a href="/dashboard.html" class="nav-link">Dashboard</a>
+                <a href="/gallery.html" class="nav-link">Gallery</a>
+                <a href="/upload.html" class="nav-link">Upload</a>
+                <div class="nav-user">
+                    <span class="user-credits" id="userCredits">Loading...</span>
+                    <div class="user-dropdown">
+                        <button class="user-avatar" id="userAvatar">
+                            <span id="userName">Loading...</span>
+                        </button>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <a href="/dashboard.html" class="dropdown-item">Dashboard</a>
+                            <a href="/gallery.html" class="dropdown-item">Gallery</a>
+                            <a href="/pricing.html" class="dropdown-item active">Billing</a>
+                            <a href="/support.html" class="dropdown-item">Support</a>
+                            <div class="admin-section hidden" id="adminSection">
+                                <div class="dropdown-divider"></div>
+                                <a href="/admin.html" class="dropdown-item">Admin Panel</a>
+                            </div>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
+                        </div>
+                    </div>
+                </div>
             </div>
             <button class="theme-toggle" id="themeToggle">🌙</button>
         </div>
     </nav>
 
     <main class="pricing-main">
-        <div class="pricing-header">
-            <h1 class="animate-fade-in">Choose Your Plan</h1>
-            <p class="animate-fade-in-delay">Transform your images with AI-powered tools. Start free, upgrade when you need more.</p>
-        </div>
-
-        <div class="pricing-toggle animate-fade-in-delay-2">
-            <span class="toggle-label">Monthly</span>
-            <label class="toggle-switch">
-                <input type="checkbox" id="pricingToggle">
-                <span class="toggle-slider"></span>
-            </label>
-            <span class="toggle-label">
-                Annual 
-                <span class="discount-badge">Save 20%</span>
-            </span>
-        </div>
-
-        <div class="pricing-plans">
-            <div class="pricing-card glass-effect animate-slide-in-up" style="animation-delay: 0.1s;">
+        <div class="pricing-container">
+            <!-- Current Plan Section -->
+            <div class="current-plan-section">
                 <div class="plan-header">
-                    <h3>Free</h3>
-                    <div class="plan-price">
-                        <span class="price">$0</span>
-                        <span class="period">/month</span>
+                    <h1 class="pricing-title">Your Current Plan</h1>
+                </div>
+                <div class="current-plan-card" id="currentPlanCard">
+                    <div class="plan-info">
+                        <h2 class="plan-name" id="currentPlanName">Loading...</h2>
+                        <div class="plan-credits">
+                            <span class="credits-count" id="currentCredits">-</span>
+                            <span class="credits-label">Credits Remaining</span>
+                        </div>
                     </div>
-                    <p class="plan-description">Perfect for getting started</p>
-                </div>
-
-                <div class="plan-features">
-                    <ul>
-                        <li>✅ 10 credits per month</li>
-                        <li>✅ Basic transformations</li>
-                        <li>✅ Image enhancement</li>
-                        <li>✅ Background removal</li>
-                        <li>❌ Priority processing</li>
-                        <li>❌ Advanced AI tools</li>
-                        <li>❌ API access</li>
-                    </ul>
-                </div>
-
-                <div class="plan-action">
-                    <a href="login.html" class="btn btn-secondary btn-lg">Get Started Free</a>
-                </div>
-            </div>
-
-            <div class="pricing-card glass-effect popular animate-slide-in-up" style="animation-delay: 0.2s;">
-                <div class="popular-badge">Most Popular</div>
-                <div class="plan-header">
-                    <h3>Pro</h3>
-                    <div class="plan-price">
-                        <span class="price monthly-price">$19</span>
-                        <span class="price annual-price" style="display: none;">$15</span>
-                        <span class="period">/month</span>
+                    <div class="plan-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Plan Status:</span>
+                            <span class="detail-value" id="planStatus">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Next Reset:</span>
+                            <span class="detail-value" id="nextReset">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Billing Cycle:</span>
+                            <span class="detail-value" id="billingCycle">-</span>
+                        </div>
                     </div>
-                    <p class="plan-description">For professionals and creators</p>
-                </div>
-
-                <div class="plan-features">
-                    <ul>
-                        <li>✅ 500 credits per month</li>
-                        <li>✅ All transformations</li>
-                        <li>✅ Priority processing</li>
-                        <li>✅ Advanced AI tools</li>
-                        <li>✅ Bulk operations</li>
-                        <li>✅ Email support</li>
-                        <li>❌ API access</li>
-                    </ul>
-                </div>
-
-                <div class="plan-action">
-                    <button class="btn btn-primary btn-lg" onclick="showComingSoon()">
-                        Upgrade to Pro
-                    </button>
                 </div>
             </div>
 
-            <div class="pricing-card glass-effect animate-slide-in-up" style="animation-delay: 0.3s;">
-                <div class="plan-header">
-                    <h3>Enterprise</h3>
-                    <div class="plan-price">
-                        <span class="price monthly-price">$99</span>
-                        <span class="price annual-price" style="display: none;">$79</span>
-                        <span class="period">/month</span>
+            <!-- Transaction History -->
+            <div class="transaction-section" id="transactionSection">
+                <h2 class="section-title">Transaction History</h2>
+                <div class="transaction-filters">
+                    <select id="transactionFilter" class="filter-select">
+                        <option value="all">All Transactions</option>
+                        <option value="credit_usage">Credit Usage</option>
+                        <option value="plan_changes">Plan Changes</option>
+                        <option value="resets">Credit Resets</option>
+                    </select>
+                </div>
+                <div class="transaction-list" id="transactionList">
+                    <div class="loading-state">Loading transaction history...</div>
+                </div>
+            </div>
+
+            <!-- Available Plans -->
+            <div class="plans-section">
+                <h2 class="section-title">Available Plans</h2>
+                <div class="plans-grid">
+                    <div class="plan-card" data-plan="1">
+                        <div class="plan-badge">Current</div>
+                        <div class="plan-icon">🆓</div>
+                        <h3 class="plan-title">Free Plan</h3>
+                        <div class="plan-price">
+                            <span class="price-amount">$0</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                        <ul class="plan-features">
+                            <li>50 credits per month</li>
+                            <li>Basic AI transformations</li>
+                            <li>Standard support</li>
+                            <li>Monthly credit reset</li>
+                        </ul>
+                        <button class="btn btn-outline plan-btn" disabled>Current Plan</button>
                     </div>
-                    <p class="plan-description">For teams and businesses</p>
-                </div>
 
-                <div class="plan-features">
-                    <ul>
-                        <li>✅ Unlimited credits</li>
-                        <li>✅ All transformations</li>
-                        <li>✅ Priority processing</li>
-                        <li>✅ Advanced AI tools</li>
-                        <li>✅ API access</li>
-                        <li>✅ Team management</li>
-                        <li>✅ Priority support</li>
-                    </ul>
-                </div>
+                    <div class="plan-card featured" data-plan="2">
+                        <div class="plan-badge">Popular</div>
+                        <div class="plan-icon">⚡</div>
+                        <h3 class="plan-title">Pro Monthly</h3>
+                        <div class="plan-price">
+                            <span class="price-amount">$9.99</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                        <ul class="plan-features">
+                            <li>500 credits per month</li>
+                            <li>All AI transformations</li>
+                            <li>Priority support</li>
+                            <li>Advanced features</li>
+                            <li>Monthly billing cycle</li>
+                        </ul>
+                        <button class="btn btn-primary plan-btn" data-plan-id="2">Upgrade Now</button>
+                    </div>
 
-                <div class="plan-action">
-                    <button class="btn btn-primary btn-lg" onclick="showComingSoon()">
-                        Contact Sales
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div class="pricing-faq">
-            <h2>Frequently Asked Questions</h2>
-            <div class="faq-grid">
-                <div class="faq-item glass-effect">
-                    <h4>What are credits?</h4>
-                    <p>Credits are used for AI transformations. Different tools consume different amounts of credits based on complexity.</p>
-                </div>
-
-                <div class="faq-item glass-effect">
-                    <h4>Can I upgrade or downgrade anytime?</h4>
-                    <p>Yes! You can change your plan at any time. Changes take effect immediately with prorated billing.</p>
-                </div>
-
-                <div class="faq-item glass-effect">
-                    <h4>What payment methods do you accept?</h4>
-                    <p>We accept all major credit cards, PayPal, and bank transfers for enterprise customers.</p>
-                </div>
-
-                <div class="faq-item glass-effect">
-                    <h4>Is there a free trial?</h4>
-                    <p>Yes! Every new account gets 10 free credits to try our AI tools with no credit card required.</p>
-                </div>
-
-                <div class="faq-item glass-effect">
-                    <h4>Do unused credits carry over?</h4>
-                    <p>Unused credits expire at the end of each billing cycle, but we provide notifications before expiration.</p>
-                </div>
-
-                <div class="faq-item glass-effect">
-                    <h4>Need more credits?</h4>
-                    <p>Contact us for custom pricing if you need more credits than our standard plans offer.</p>
+                    <div class="plan-card" data-plan="3">
+                        <div class="plan-badge">Best Value</div>
+                        <div class="plan-icon">💎</div>
+                        <h3 class="plan-title">Pro 6-Month</h3>
+                        <div class="plan-price">
+                            <span class="price-amount">$49.99</span>
+                            <span class="price-period">/6 months</span>
+                        </div>
+                        <div class="plan-savings">Save 17%</div>
+                        <ul class="plan-features">
+                            <li>500 credits per month</li>
+                            <li>All AI transformations</li>
+                            <li>Premium support</li>
+                            <li>Advanced features</li>
+                            <li>6-month billing cycle</li>
+                            <li>17% discount</li>
+                        </ul>
+                        <button class="btn btn-primary plan-btn" data-plan-id="3">Upgrade Now</button>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="pricing-cta">
-            <div class="cta-content glass-effect">
-                <h2>Ready to transform your images?</h2>
-                <p>Join thousands of creators using SSnapify to enhance their visual content</p>
-                <div class="cta-buttons">
-                    <a href="login.html" class="btn btn-primary btn-lg">Start Free Trial</a>
-                    <a href="support.html" class="btn btn-secondary btn-lg">Contact Support</a>
+            <!-- Usage Statistics -->
+            <div class="usage-section">
+                <h2 class="section-title">Credit Usage Statistics</h2>
+                <div class="usage-stats">
+                    <div class="usage-card">
+                        <div class="usage-icon">📊</div>
+                        <div class="usage-info">
+                            <div class="usage-number" id="totalCreditsUsed">-</div>
+                            <div class="usage-label">Total Credits Used</div>
+                        </div>
+                    </div>
+                    <div class="usage-card">
+                        <div class="usage-icon">🏆</div>
+                        <div class="usage-info">
+                            <div class="usage-number" id="mostUsedTool">-</div>
+                            <div class="usage-label">Most Used Tool</div>
+                        </div>
+                    </div>
+                    <div class="usage-card">
+                        <div class="usage-icon">📅</div>
+                        <div class="usage-info">
+                            <div class="usage-number" id="averageDaily">-</div>
+                            <div class="usage-label">Avg. Daily Usage</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <div class="toast-container" id="toastContainer"></div>
+    <!-- Plan Change Confirmation Modal -->
+    <div class="modal hidden" id="planModal">
+        <div class="modal-overlay" id="modalOverlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Confirm Plan Change</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="plan-change-info">
+                    <p>You are about to upgrade to:</p>
+                    <div class="new-plan-info" id="newPlanInfo">
+                        <!-- Plan details will be inserted here -->
+                    </div>
+                    <div class="billing-info">
+                        <p><strong>Note:</strong> This is a demo. In production, this would integrate with a payment processor like Stripe.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelPlan">Cancel</button>
+                <button class="btn btn-primary" id="confirmPlan">Confirm Upgrade</button>
+            </div>
+        </div>
+    </div>
 
-    <!-- Updated Script References -->
-    <script type="module" src="/js/config.js"></script>
-    <script type="module" src="/js/theme.js"></script>
-    <script type="module" src="/js/utils.js"></script>
-    <script>
-        // Pricing toggle functionality
-        const pricingToggle = document.getElementById('pricingToggle');
-        const monthlyPrices = document.querySelectorAll('.monthly-price');
-        const annualPrices = document.querySelectorAll('.annual-price');
-
-        pricingToggle.addEventListener('change', function() {
-            if (this.checked) {
-                monthlyPrices.forEach(price => price.style.display = 'none');
-                annualPrices.forEach(price => price.style.display = 'inline');
-            } else {
-                monthlyPrices.forEach(price => price.style.display = 'inline');
-                annualPrices.forEach(price => price.style.display = 'none');
-            }
-        });
-
-        function showComingSoon() {
-            alert('Payment integration coming soon! For now, enjoy the free tier or contact us for enterprise needs.');
-        }
-    </script>
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/theme.js"></script>
+    <script src="/js/pricing.js"></script>
+    
 </body>
 </html>

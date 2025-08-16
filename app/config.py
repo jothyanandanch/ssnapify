@@ -1,8 +1,9 @@
-#Reads Environment Variables and validates them
+# app/config.py
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
     # Database
     database_url: str
     postgres_user: str
@@ -19,11 +20,16 @@ class Settings(BaseSettings):
     google_client_secret: str
     google_redirect_url: str
 
-    #Cloudinary
-    cloudinary_cloud_name:str
-    cloudinary_api_key:str
-    cloudinary_api_secret:str
-    
+    # Cloudinary
+    cloudinary_cloud_name: str
+    cloudinary_api_key: str
+    cloudinary_api_secret: str
 
+    # Redis
+    redis_url: str = "redis://localhost:6379/0"
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+    redis_db: int = 0
+    redis_password: str = ""
 
-settings=Settings()
+settings = Settings()

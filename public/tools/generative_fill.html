@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative Fill - SSnapify</title>
+    <link rel="stylesheet" href="/styles/base.css">
+    <link rel="stylesheet" href="/styles/layout.css">
+    <link rel="stylesheet" href="/styles/components.css">
+    <link rel="stylesheet" href="/styles/theme.css">
+    <link rel="stylesheet" href="/styles/tools.css">
+    <link rel="stylesheet" href="/styles/upload.css">
+    <link rel="stylesheet" href="/styles/animations.css">
+    <link rel="stylesheet" href="/styles/responsive.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="/assets/images/logo.png" alt="SSnapify" class="nav-logo">
+                <span class="nav-title">SSnapify</span>
+            </div>
+            <div class="nav-menu">
+                <a href="/index.html" class="nav-link">Home</a>
+                <a href="/dashboard.html" class="nav-link">Dashboard</a>
+                <a href="/gallery.html" class="nav-link">Gallery</a>
+                <div class="nav-user">
+                    <span class="user-credits" id="userCredits">Loading...</span>
+                    <div class="user-dropdown">
+                        <button class="user-avatar" id="userAvatar">
+                            <span id="userName">Loading...</span>
+                        </button>
+                        <div class="dropdown-menu" id="dropdownMenu">
+                            <a href="/dashboard.html" class="dropdown-item">Dashboard</a>
+                            <a href="/gallery.html" class="dropdown-item">Gallery</a>
+                            <a href="/pricing.html" class="dropdown-item">Billing</a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="theme-toggle" id="themeToggle">🌙</button>
+        </div>
+    </nav>
+
+    <main class="tool-main">
+        <div class="tool-container">
+            <div class="tool-header">
+                <div class="tool-info">
+                    <div class="tool-icon">🎨</div>
+                    <div class="tool-text">
+                        <h1 class="tool-title">Generative Fill</h1>
+                        <p class="tool-description">Fill areas with AI-generated content matching your description</p>
+                        <div class="tool-cost">3 Credits per image</div>
+                    </div>
+                </div>
+                <div class="tool-actions">
+                    <a href="/index.html" class="btn btn-outline">← Back to Tools</a>
+                </div>
+            </div>
+
+            <div class="tool-content">
+                <!-- Upload Section -->
+                <div class="upload-section" id="uploadSection">
+                    <div class="upload-zone" id="uploadZone">
+                        <input type="file" id="fileInput" multiple accept="image/*" hidden>
+                        <div class="upload-content">
+                            <div class="upload-icon">📁</div>
+                            <h3 class="upload-text">Drop images here for generative fill</h3>
+                            <p class="upload-subtext">or click to browse</p>
+                            <button class="btn btn-primary" id="browseBtn">Browse Files</button>
+                        </div>
+                        <div class="upload-info">
+                            <p>AI will intelligently fill areas based on your description</p>
+                            <p>Supported: JPG, PNG, GIF, WebP • Max 10MB</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prompt Section -->
+                <div class="prompt-section hidden" id="promptSection">
+                    <h3 class="prompt-title">Describe What to Generate</h3>
+                    <div class="prompt-input-group">
+                        <textarea 
+                            id="fillPrompt" 
+                            class="prompt-textarea" 
+                            placeholder="Describe what you want to generate in the selected areas. For example: 'Add flowers in the garden', 'Fill with clouds in the sky', 'Add people walking'..."
+                            rows="3"
+                        ></textarea>
+                        <div class="prompt-examples">
+                            <p>Examples:</p>
+                            <div class="example-tags">
+                                <span class="example-tag" data-prompt="Add colorful flowers and butterflies">Flowers & Butterflies</span>
+                                <span class="example-tag" data-prompt="Fill with fluffy white clouds">Fluffy Clouds</span>
+                                <span class="example-tag" data-prompt="Add people walking in the distance">Walking People</span>
+                                <span class="example-tag" data-prompt="Extend the building architecture">Extend Building</span>
+                                <span class="example-tag" data-prompt="Add trees and greenery">Trees & Nature</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="fill-instructions">
+                        <h4>How Generative Fill Works:</h4>
+                        <ol>
+                            <li>Upload your image</li>
+                            <li>Describe what you want to generate</li>
+                            <li>AI will analyze the image and fill areas intelligently</li>
+                            <li>The generated content will match the style and context</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <!-- Processing Section -->
+                <div class="processing-section hidden" id="processingSection">
+                    <div class="processing-grid" id="processingGrid">
+                        <!-- Processing items will appear here -->
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div class="results-section hidden" id="resultsSection">
+                    <h2 class="section-title">Generated Images</h2>
+                    <div class="results-grid" id="resultsGrid">
+                        <!-- Results will appear here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/config.js"></script>
+    <script src="/js/api.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/theme.js"></script>
+    <script>
+        // Tool-specific configuration
+        window.TOOL_CONFIG = {
+            type: 'generative_fill',
+            name: 'Generative Fill',
+            cost: 3,
+            endpoint: '/images/{id}/generative_fill',
+            requiresPrompt: true
+        };
+    </script>
+    <script src="/js/tools.js"></script>
+</body>
+</html>
