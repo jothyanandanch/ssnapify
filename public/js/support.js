@@ -1,7 +1,7 @@
 // Auth Management
 const API_BASE = 'http://localhost:8000';
-const getToken = () => localStorage.getItem('token') || '';
-const clearToken = () => localStorage.removeItem('token');
+const getToken = () => localStorage.getItem('access_token') || '';
+const clearToken = () => localStorage.removeItem('access_token');
 
 async function logout() {
     try {

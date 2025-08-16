@@ -4,141 +4,128 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gallery - SSnapify</title>
-    <link rel="stylesheet" href="/styles/base.css">
-    <link rel="stylesheet" href="/styles/layout.css">
-    <link rel="stylesheet" href="/styles/components.css">
-    <link rel="stylesheet" href="/styles/theme.css">
+    <link rel="stylesheet" href="/styles/main.css">
     <link rel="stylesheet" href="/styles/gallery.css">
-    <link rel="stylesheet" href="/styles/animations.css">
-    <link rel="stylesheet" href="/styles/responsive.css">
-    <script src="/js/auth.js"></script>
-    <link rel="stylesheet" href="/styles/components.css">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <img src="/assets/images/logo.png" alt="SSnapify" class="nav-logo">
-                <span class="nav-title">SSnapify</span>
+                <h2>SSnapify</h2>
             </div>
             <div class="nav-menu">
                 <a href="/index.html" class="nav-link">Home</a>
                 <a href="/dashboard.html" class="nav-link">Dashboard</a>
+                <a href="/gallery.html" class="nav-link active">Gallery</a>
                 <a href="/upload.html" class="nav-link">Upload</a>
-                <a href="/pricing.html" class="nav-link">Billing</a>
-                <div class="nav-user">
-                    <span class="user-credits" id="userCredits">Loading...</span>
-                    <div class="user-dropdown">
-                        <button class="user-avatar" id="userAvatar">
-                            <span id="userName">Loading...</span>
-                        </button>
-                        <div class="dropdown-menu" id="dropdownMenu">
-                            <a href="/dashboard.html" class="dropdown-item">Dashboard</a>
-                            <a href="/gallery.html" class="dropdown-item active">Gallery</a>
-                            <a href="/pricing.html" class="dropdown-item">Billing</a>
-                            <a href="/support.html" class="dropdown-item">Support</a>
-                            <div class="admin-section hidden" id="adminSection">
-                                <div class="dropdown-divider"></div>
-                                <a href="/admin.html" class="dropdown-item">Admin Panel</a>
-                            </div>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
+            </div>
+            <div class="nav-user" id="navUser">
+                <div class="user-dropdown">
+                    <button class="user-btn" id="userBtn">
+                        <span id="userName">User</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 10l5 5 5-5z"/>
+                        </svg>
+                    </button>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <div class="user-info">
+                            <span id="userCredits">-- Credits</span>
                         </div>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item logout-btn" id="logoutBtn">Logout</button>
                     </div>
                 </div>
             </div>
-            <button class="theme-toggle" id="themeToggle">🌙</button>
         </div>
     </nav>
 
-    <main class="gallery-main">
-        <div class="gallery-container">
+    <!-- Main Content -->
+    <main class="gallery-page">
+        <div class="container">
+            <!-- Header -->
             <div class="gallery-header">
-                <h1 class="gallery-title">Your Image Gallery</h1>
+                <h1>Your Image Gallery</h1>
                 <div class="gallery-controls">
-                    <div class="filter-section">
-                        <select id="filterType" class="filter-select">
+                    <div class="filter-group">
+                        <select id="filterSelect" class="filter-select">
                             <option value="all">All Images</option>
                             <option value="">Original</option>
-                            <option value="restore">Restored</option>
+                            <option value="restore">AI Restored</option>
                             <option value="remove_bg">Background Removed</option>
-                            <option value="remove_obj">Object Removed</option>
                             <option value="enhance">Enhanced</option>
                             <option value="replace_bg">Background Replaced</option>
                             <option value="generative_fill">Generative Fill</option>
                         </select>
                     </div>
                     <div class="view-toggle">
-                        <button class="view-btn active" data-view="grid" id="gridView">⊞</button>
-                        <button class="view-btn" data-view="list" id="listView">☰</button>
+                        <button class="view-btn active" data-view="grid">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <rect x="3" y="3" width="7" height="7"/>
+                                <rect x="14" y="3" width="7" height="7"/>
+                                <rect x="3" y="14" width="7" height="7"/>
+                                <rect x="14" y="14" width="7" height="7"/>
+                            </svg>
+                        </button>
+                        <button class="view-btn" data-view="list">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                <line x1="8" y1="6" x2="21" y2="6"/>
+                                <line x1="8" y1="12" x2="21" y2="12"/>
+                                <line x1="8" y1="18" x2="21" y2="18"/>
+                                <rect x="3" y="4" width="2" height="2"/>
+                                <rect x="3" y="10" width="2" height="2"/>
+                                <rect x="3" y="16" width="2" height="2"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             </div>
 
-            <div class="gallery-content">
-                <div class="loading-state" id="loadingState">
-                    <div class="loading-spinner"></div>
-                    <p>Loading your images...</p>
-                </div>
-
-                <div class="empty-state hidden" id="emptyState">
-                    <div class="empty-icon">📷</div>
-                    <h3>No images found</h3>
-                    <p>Upload your first image to get started!</p>
-                    <a href="/upload.html" class="btn btn-primary">Upload Images</a>
-                </div>
-
-                <div class="gallery-grid" id="galleryGrid">
-                    <!-- Images will be loaded here -->
-                </div>
+            <!-- Gallery Grid -->
+            <div class="gallery-grid" id="galleryGrid">
+                <div class="loading">Loading your images...</div>
             </div>
 
-            <div class="pagination" id="pagination">
-                <!-- Pagination will be generated here -->
+            <!-- Empty State -->
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon">🖼️</div>
+                <h3>No images found</h3>
+                <p>Start by uploading some images to see them here.</p>
+                <a href="/upload.html" class="btn btn-primary">Upload Images</a>
+            </div>
+
+            <!-- Load More -->
+            <div class="load-more" id="loadMore" style="display: none;">
+                <button class="btn btn-outline" id="loadMoreBtn">Load More Images</button>
             </div>
         </div>
     </main>
 
     <!-- Image Modal -->
-    <div class="modal hidden" id="imageModal">
+    <div class="modal" id="imageModal" style="display: none;">
         <div class="modal-overlay" id="modalOverlay"></div>
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">Image Details</h3>
-                <button class="modal-close" id="modalClose">×</button>
+            <button class="modal-close" id="modalClose">×</button>
+            <div class="modal-image">
+                <img id="modalImg" src="" alt="">
             </div>
-            <div class="modal-body">
-                <div class="image-preview">
-                    <img id="modalImage" alt="Image preview">
+            <div class="modal-info">
+                <h3 id="modalTitle">Image Title</h3>
+                <div class="modal-meta">
+                    <span id="modalType">Original</span>
+                    <span id="modalDate">Date</span>
                 </div>
-                <div class="image-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Title:</span>
-                        <span class="detail-value" id="imageTitle">-</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Type:</span>
-                        <span class="detail-value" id="imageType">-</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Created:</span>
-                        <span class="detail-value" id="imageDate">-</span>
-                    </div>
-                </div>
-                <div class="image-actions">
-                    <a id="downloadBtn" class="btn btn-primary" target="_blank">Download</a>
-                    <button id="deleteBtn" class="btn btn-danger">Delete</button>
+                <div class="modal-actions">
+                    <button class="btn btn-outline" id="downloadBtn">Download</button>
+                    <button class="btn btn-danger" id="deleteBtn">Delete</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="/js/config.js"></script>
-    <script src="/js/api.js"></script>
-    <script src="/js/utils.js"></script>
-    <script src="/js/theme.js"></script>
+    <script src="/js/core.js"></script>
+    <script src="/js/auth.js"></script>
     <script src="/js/gallery.js"></script>
-    
 </body>
 </html>

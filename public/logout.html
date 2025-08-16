@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="/styles/animations.css">
     <link rel="stylesheet" href="/styles/responsive.css">
     <script src="/js/auth.js"></script>
+    <link rel="stylesheet" href="/styles/nav.css">
     <link rel="stylesheet" href="/styles/components.css">
 
 </head>
@@ -69,4 +70,80 @@
     <script src="/js/logout.js"></script>
     
 </body>
+<header class="main-header">
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="/index.html">
+                <img src="/assets/images/logo.png" alt="SSnapify" class="logo">
+                SSnapify
+            </a>
+        </div>
+        <div class="nav-menu">
+            <a href="/index.html" class="nav-link">Home</a>
+            <a href="/dashboard.html" class="nav-link auth-required">Dashboard</a>
+            <a href="/gallery.html" class="nav-link auth-required">Gallery</a>
+            <a href="/upload.html" class="nav-link auth-required">Upload</a>
+            <a href="/pricing.html" class="nav-link">Pricing</a>
+            <a href="/support.html" class="nav-link">Support</a>
+        </div>
+        <div class="nav-auth" id="navAuth">
+            <a href="/login.html" class="btn btn-primary">Login with Google</a>
+        </div>
+        <div class="nav-user" id="navUser" style="display: none;">
+            <div class="user-dropdown">
+                <button class="user-avatar" id="userAvatar">
+                    <span id="userName">User</span>
+                    <span class="dropdown-arrow">▼</span>
+                </button>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <div class="user-info">
+                        <div id="userCredits">-- Credits</div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="/dashboard.html" class="dropdown-item">Dashboard</a>
+                    <a href="/pricing.html" class="dropdown-item">Billing</a>
+                    <div id="adminSection" class="hidden">
+                        <div class="dropdown-divider"></div>
+                        <a href="/admin.html" class="dropdown-item">Admin Panel</a>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <button id="logoutBtn" class="dropdown-item logout-btn">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+<footer class="footer">
+    <div class="footer-container">
+        <div class="footer-section">
+            <div class="footer-brand">
+                <img src="/assets/images/logo.png" alt="SSnapify" class="footer-logo">
+                <span class="footer-title">SSnapify</span>
+            </div>
+            <p class="footer-description">AI-powered image enhancement for everyone.</p>
+        </div>
+        <div class="footer-section">
+            <h4 class="footer-heading">Product</h4>
+            <a href="#features" class="footer-link">Features</a>
+            <a href="/pricing.html" class="footer-link">Pricing</a>
+            <a href="/dashboard.html" class="footer-link">Dashboard</a>
+        </div>
+        <div class="footer-section">
+            <h4 class="footer-heading">Support</h4>
+            <a href="/support.html" class="footer-link">Help Center</a>
+            <a href="/privacy.html" class="footer-link">Privacy</a>
+            <a href="/terms.html" class="footer-link">Terms</a>
+        </div>
+        <div class="footer-section">
+            <h4 class="footer-heading">Company</h4>
+            <a href="/index.html" class="footer-link">About</a>
+            <a href="/support.html" class="footer-link">Contact</a>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>&copy; 2025 SSnapify. All rights reserved.</p>
+    </div>
+</footer>
+
+
 </html>

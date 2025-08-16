@@ -1,113 +1,127 @@
-class Dashboard {
-    constructor() {
-        this.init();
-    }
+document.addEventListener('DOMContentLoaded', async () => {
+    // Require authentication
+    if (!auth.requireAuth()) return;
 
-    async init() {
-        if (!window.authManager || !window.authManager.token) {
-            window.location.href = '/static/login.html';
-            return;
+    await loadDashboardData();
+    setupDashboard();
+});
+
+async function loadDashboardData() {
+    try {
+        // Load user info, credits, and recent images in parallel
+        const [user, credits, images] = await Promise.all([
+            core.user || core.fetchUserData(),
+            core.getCredits(),
+            core.getUserImages({ limit: 6 })
+        ]);
+
+        // Update user info
+        if (user) {
+            updateUserInfo(user);
         }
 
-        await this.loadUserData();
-        await this.loadImages();
-        await this.loadCredits();
-    }
-
-    async loadUserData() {
-        try {
-            const response = await window.authManager.apiCall('/users/me');
-            if (response && response.ok) {
-                const user = await response.json();
-                this.displayUserInfo(user);
-            }
-        } catch (error) {
-            console.error('Failed to load user data:', error);
-            this.showError('Failed to load user information');
-        }
-    }
-
-    async loadImages() {
-        try {
-            const response = await window.authManager.apiCall('/images/?limit=10');
-            if (response && response.ok) {
-                const images = await response.json();
-                this.displayRecentImages(images);
-            }
-        } catch (error) {
-            console.error('Failed to load images:', error);
-            this.showError('Failed to load recent images');
-        }
-    }
-
-    async loadCredits() {
-        try {
-            const response = await window.authManager.apiCall('/account/credits');
-            if (response && response.ok) {
-                const credits = await response.json();
-                this.displayCredits(credits);
-            }
-        } catch (error) {
-            console.error('Failed to load credits:', error);
-            this.showError('Failed to load credit information');
-        }
-    }
-
-    displayUserInfo(user) {
-        const userNameEl = document.getElementById('user-name-display');
-        const userEmailEl = document.getElementById('user-email-display');
-        
-        if (userNameEl) userNameEl.textContent = user.username || 'User';
-        if (userEmailEl) userEmailEl.textContent = user.email || '';
-    }
-
-    displayCredits(credits) {
-        const creditsEl = document.getElementById('credits-display');
-        const planEl = document.getElementById('plan-display');
-        const resetEl = document.getElementById('reset-display');
-        
-        if (creditsEl) creditsEl.textContent = credits.credit_balance || 0;
-        if (planEl) planEl.textContent = credits.plan_name || 'Free';
-        if (resetEl) resetEl.textContent = `${credits.days_until_next_reset || 0} days`;
-    }
-
-    displayRecentImages(images) {
-        const container = document.getElementById('recent-images');
-        if (!container) return;
-
-        if (!images || images.length === 0) {
-            container.innerHTML = '<p>No images uploaded yet. <a href="/static/upload.html">Upload your first image</a></p>';
-            return;
+        // Update credits and plan info
+        if (credits) {
+            updateCreditsInfo(credits);
         }
 
-        const imagesHtml = images.map(image => `
-            <div class="image-card">
-                <img src="${image.secure_url}" alt="${image.title}" loading="lazy">
-                <div class="image-info">
-                    <h4>${image.title}</h4>
-                    <p>${image.transformation_type || 'Original'}</p>
-                    <small>${new Date(image.created_at).toLocaleDateString()}</small>
-                </div>
-            </div>
-        `).join('');
+        // Update recent images
+        updateRecentImages(images || []);
 
-        container.innerHTML = imagesHtml;
-    }
-
-    showError(message) {
-        const errorContainer = document.getElementById('error-messages');
-        if (errorContainer) {
-            errorContainer.innerHTML = `<div class="alert alert-error">${message}</div>`;
-        } else {
-            console.error(message);
-        }
+    } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+        core.showToast('Failed to load dashboard data', 'error');
     }
 }
 
-// Initialize dashboard when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    // Wait for auth manager to initialize
-    setTimeout(() => {
-        new Dashboard();
-    }, 100);
-});
+function updateUserInfo(user) {
+    const userNameDisplay = document.getElementById('userNameDisplay');
+    if (userNameDisplay) {
+        userNameDisplay.textContent = user.username || user.email.split('@')[0];
+    }
+}
+
+function updateCreditsInfo(credits) {
+    // Update credits count
+    const creditsCount = document.getElementById('creditsCount');
+    if (creditsCount) {
+        creditsCount.textContent = credits.credit_balance || 0;
+    }
+
+    // Update plan name
+    const planName = document.getElementById('planName');
+    if (planName) {
+        planName.textContent = credits.plan_name || 'Free';
+    }
+
+    // Update next reset days
+    const nextReset = document.getElementById('nextReset');
+    if (nextReset) {
+        nextReset.textContent = credits.days_until_next_reset || '--';
+    }
+}
+
+function updateRecentImages(images) {
+    const recentImagesContainer = document.getElementById('recentImages');
+    const imageCount = document.getElementById('imageCount');
+    
+    // Update image count
+    if (imageCount) {
+        imageCount.textContent = images.length;
+    }
+
+    if (!recentImagesContainer) return;
+
+    if (images.length === 0) {
+        recentImagesContainer.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🖼️</div>
+                <h3>No images yet</h3>
+                <p>Upload your first image to get started</p>
+                <a href="/upload.html" class="btn btn-primary">Upload Images</a>
+            </div>
+        `;
+        return;
+    }
+
+    const imagesHTML = images.map(image => `
+        <div class="image-card" onclick="window.location.href='/gallery.html'">
+            <div class="image-thumbnail">
+                <img src="${image.secure_url}" alt="${image.title}" loading="lazy">
+                <div class="image-overlay">
+                    <span class="image-type">${formatTransformationType(image.transformation_type)}</span>
+                </div>
+            </div>
+            <div class="image-info">
+                <h4 class="image-title">${truncateText(image.title, 20)}</h4>
+                <p class="image-date">${formatDate(image.created_at)}</p>
+            </div>
+        </div>
+    `).join('');
+
+    recentImagesContainer.innerHTML = imagesHTML;
+}
+
+function setupDashboard() {
+    // Any additional dashboard setup
+    console.log('Dashboard setup complete');
+}
+
+// Utility functions
+function formatTransformationType(type) {
+    if (!type) return 'Original';
+    return type.replace(/_/g, ' ').split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+function truncateText(text, length) {
+    return text && text.length > length ? text.substring(0, length) + '...' : text;
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+    });
+}

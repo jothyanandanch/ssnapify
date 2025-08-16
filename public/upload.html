@@ -4,178 +4,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload - SSnapify</title>
-    <link rel="stylesheet" href="/styles/base.css">
-    <link rel="stylesheet" href="/styles/layout.css">
-    <link rel="stylesheet" href="/styles/components.css">
-    <link rel="stylesheet" href="/styles/theme.css">
+    <link rel="stylesheet" href="/styles/main.css">
     <link rel="stylesheet" href="/styles/upload.css">
-    <link rel="stylesheet" href="/styles/animations.css">
-    <link rel="stylesheet" href="/styles/responsive.css">
-    <script src="/js/auth.js"></script>
-    <link rel="stylesheet" href="/styles/components.css">
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <img src="/assets/images/logo.png" alt="SSnapify" class="nav-logo">
-                <span class="nav-title">SSnapify</span>
+                <h2>SSnapify</h2>
             </div>
             <div class="nav-menu">
                 <a href="/index.html" class="nav-link">Home</a>
                 <a href="/dashboard.html" class="nav-link">Dashboard</a>
                 <a href="/gallery.html" class="nav-link">Gallery</a>
-                <a href="/pricing.html" class="nav-link">Billing</a>
-                <div class="nav-user">
-                    <span class="user-credits" id="userCredits">Loading...</span>
-                    <div class="user-dropdown">
-                        <button class="user-avatar" id="userAvatar">
-                            <span id="userName">Loading...</span>
-                        </button>
-                        <div class="dropdown-menu" id="dropdownMenu">
-                            <a href="/dashboard.html" class="dropdown-item">Dashboard</a>
-                            <a href="/gallery.html" class="dropdown-item">Gallery</a>
-                            <a href="/pricing.html" class="dropdown-item">Billing</a>
-                            <a href="/support.html" class="dropdown-item">Support</a>
-                            <div class="admin-section hidden" id="adminSection">
-                                <div class="dropdown-divider"></div>
-                                <a href="/admin.html" class="dropdown-item">Admin Panel</a>
-                            </div>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
+                <a href="/upload.html" class="nav-link active">Upload</a>
+            </div>
+            <div class="nav-user" id="navUser">
+                <div class="user-dropdown">
+                    <button class="user-btn" id="userBtn">
+                        <span id="userName">User</span>
+                    </button>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <div class="user-info">
+                            <span id="userCredits">-- Credits</span>
                         </div>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item logout-btn" id="logoutBtn">Logout</button>
                     </div>
                 </div>
             </div>
-            <button class="theme-toggle" id="themeToggle">🌙</button>
         </div>
     </nav>
 
-    <main class="upload-main">
-        <div class="upload-container">
+    <!-- Main Content -->
+    <main class="upload-page">
+        <div class="container">
             <div class="upload-header">
-                <h1 class="upload-title">Upload Your Images</h1>
-                <p class="upload-subtitle">Drag and drop or click to select images for AI enhancement</p>
+                <h1>Upload Your Images</h1>
+                <p>Drag and drop or click to select images for AI enhancement</p>
             </div>
 
-            <div class="upload-section">
-                <div class="upload-zone" id="uploadZone">
-                    <input type="file" id="fileInput" multiple accept="image/*" hidden>
-                    <div class="upload-content">
-                        <div class="upload-icon">📁</div>
-                        <h3 class="upload-text">Drag & drop images here</h3>
-                        <p class="upload-subtext">or click to browse</p>
-                        <button class="btn btn-primary" id="browseBtn">Browse Files</button>
-                    </div>
+            <!-- Upload Zone -->
+            <div class="upload-zone" id="uploadZone">
+                <input type="file" id="fileInput" multiple accept="image/*" style="display: none;">
+                <div class="upload-content">
+                    <div class="upload-icon">📤</div>
+                    <h3>Drag & drop images here</h3>
+                    <p>or click to browse</p>
+                    <button class="btn btn-primary" id="browseBtn">Choose Files</button>
                     <div class="upload-info">
-                        <p>Supported formats: JPG, PNG, GIF, WebP</p>
-                        <p>Maximum file size: 10MB per image</p>
+                        <p>Supported: JPG, PNG, GIF, WebP • Max 10MB per image</p>
                     </div>
                 </div>
+            </div>
 
-                <div class="upload-queue hidden" id="uploadQueue">
-                    <h3 class="queue-title">Upload Queue</h3>
-                    <div class="queue-list" id="queueList">
-                        <!-- Upload items will appear here -->
-                    </div>
+            <!-- Upload Queue -->
+            <div class="upload-queue" id="uploadQueue" style="display: none;">
+                <div class="queue-header">
+                    <h3>Upload Queue</h3>
                     <div class="queue-actions">
-                        <button class="btn btn-primary" id="uploadAllBtn">Upload All</button>
-                        <button class="btn btn-outline" id="clearQueueBtn">Clear Queue</button>
+                        <button class="btn btn-outline" id="clearQueue">Clear All</button>
+                        <button class="btn btn-primary" id="uploadAll">Upload All</button>
                     </div>
                 </div>
+                <div class="queue-list" id="queueList"></div>
             </div>
 
-            <div class="transformation-tools hidden" id="transformationTools">
-                <h2 class="tools-title">Choose AI Transformation</h2>
-                <div class="tools-grid">
-                    <div class="tool-card" data-tool="restore">
-                        <div class="tool-icon">🔧</div>
-                        <h3 class="tool-title">AI Restore</h3>
-                        <p class="tool-description">Enhance and restore image quality</p>
-                        <div class="tool-cost">1 Credit</div>
-                        <button class="btn btn-primary tool-apply" data-type="restore">Apply</button>
-                    </div>
-
-                    <div class="tool-card" data-tool="remove_bg">
-                        <div class="tool-icon">🖼️</div>
-                        <h3 class="tool-title">Remove Background</h3>
-                        <p class="tool-description">Remove background automatically</p>
-                        <div class="tool-cost">1 Credit</div>
-                        <button class="btn btn-primary tool-apply" data-type="remove_bg">Apply</button>
-                    </div>
-
-                    <div class="tool-card" data-tool="remove_obj">
-                        <div class="tool-icon">✂️</div>
-                        <h3 class="tool-title">Remove Objects</h3>
-                        <p class="tool-description">Remove unwanted objects seamlessly</p>
-                        <div class="tool-cost">1 Credit</div>
-                        <button class="btn btn-primary tool-apply" data-type="remove_obj">Apply</button>
-                    </div>
-
-                    <div class="tool-card" data-tool="enhance">
-                        <div class="tool-icon">✨</div>
-                        <h3 class="tool-title">Enhance Quality</h3>
-                        <p class="tool-description">Improve overall image quality</p>
-                        <div class="tool-cost">1 Credit</div>
-                        <button class="btn btn-primary tool-apply" data-type="enhance">Apply</button>
-                    </div>
-
-                    <div class="tool-card" data-tool="replace_bg">
-                        <div class="tool-icon">🌈</div>
-                        <h3 class="tool-title">Replace Background</h3>
-                        <p class="tool-description">Generate new backgrounds with AI</p>
-                        <div class="tool-cost">2 Credits</div>
-                        <button class="btn btn-primary tool-apply" data-type="replace_bg">Apply</button>
-                    </div>
-
-                    <div class="tool-card" data-tool="generative_fill">
-                        <div class="tool-icon">🎨</div>
-                        <h3 class="tool-title">Generative Fill</h3>
-                        <p class="tool-description">Fill areas with AI-generated content</p>
-                        <div class="tool-cost">3 Credits</div>
-                        <button class="btn btn-primary tool-apply" data-type="generative_fill">Apply</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="uploaded-images hidden" id="uploadedImages">
-                <h2 class="images-title">Uploaded Images</h2>
-                <div class="images-grid" id="imagesGrid">
-                    <!-- Uploaded images will appear here -->
+            <!-- Success State -->
+            <div class="upload-success" id="uploadSuccess" style="display: none;">
+                <div class="success-icon">✅</div>
+                <h2>Upload Complete!</h2>
+                <p>Your images have been successfully uploaded.</p>
+                <div class="success-actions">
+                    <a href="/gallery.html" class="btn btn-primary">View Gallery</a>
+                    <button class="btn btn-outline" onclick="location.reload()">Upload More</button>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Progress Modal -->
-    <div class="modal hidden" id="progressModal">
-        <div class="modal-overlay"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Processing Images</h3>
-            </div>
-            <div class="modal-body">
-                <div class="progress-info">
-                    <p id="progressText">Uploading images...</p>
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="progressFill"></div>
-                    </div>
-                    <div class="progress-details">
-                        <span id="progressCount">0/0</span>
-                        <span id="progressPercent">0%</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="/js/config.js"></script>
-    <script src="/js/api.js"></script>
-    <script src="/js/utils.js"></script>
-    <script src="/js/theme.js"></script>
+    <script src="/js/core.js"></script>
+    <script src="/js/auth.js"></script>
     <script src="/js/upload.js"></script>
-    
 </body>
-
 </html>

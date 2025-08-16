@@ -4,121 +4,118 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SSnapify - AI-Powered Image Enhancement</title>
-    <link rel="stylesheet" href="/styles/base.css">
-    <link rel="stylesheet" href="/styles/layout.css">
+    <link rel="stylesheet" href="/styles/main.css">
     <link rel="stylesheet" href="/styles/components.css">
-    <link rel="stylesheet" href="/styles/theme.css">
-    <link rel="stylesheet" href="/styles/index.css">
-    <link rel="stylesheet" href="/styles/animations.css">
-    <link rel="stylesheet" href="/styles/responsive.css">
-    <script src="/js/auth.js"></script>
-    <link rel="stylesheet" href="/styles/components.css">
-
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <img src="/assets/images/logo.png" alt="SSnapify" class="nav-logo">
-                <span class="nav-title">SSnapify</span>
+                <h2>SSnapify</h2>
             </div>
             <div class="nav-menu">
-                <a href="#features" class="nav-link">Features</a>
-                <a href="#pricing" class="nav-link">Pricing</a>
+                <a href="/index.html" class="nav-link active">Home</a>
+                <a href="/pricing.html" class="nav-link">Pricing</a>
                 <a href="/support.html" class="nav-link">Support</a>
                 <div class="nav-auth" id="navAuth">
                     <a href="/login.html" class="btn btn-outline">Login</a>
                     <a href="/login.html" class="btn btn-primary">Get Started</a>
                 </div>
-                <div class="nav-user hidden" id="navUser">
-                    <span class="user-credits" id="userCredits"></span>
+                <div class="nav-user" id="navUser" style="display: none;">
                     <div class="user-dropdown">
-                        <button class="user-avatar" id="userAvatar">
-                            <span id="userName"></span>
+                        <button class="user-btn" id="userBtn">
+                            <span id="userName">User</span>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M7 10l5 5 5-5z"/>
+                            </svg>
                         </button>
                         <div class="dropdown-menu" id="dropdownMenu">
                             <a href="/dashboard.html" class="dropdown-item">Dashboard</a>
                             <a href="/gallery.html" class="dropdown-item">Gallery</a>
                             <a href="/pricing.html" class="dropdown-item">Billing</a>
                             <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item" id="logoutBtn">Logout</a>
+                            <button class="dropdown-item logout-btn" id="logoutBtn">Logout</button>
                         </div>
                     </div>
                 </div>
             </div>
-            <button class="theme-toggle" id="themeToggle">🌙</button>
         </div>
     </nav>
 
-    <main>
-        <section class="hero">
-            <div class="hero-container">
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
                 <h1 class="hero-title">Transform Your Images with AI Magic</h1>
-                <p class="hero-subtitle">Professional image enhancement, background removal, object detection, and creative transformations powered by artificial intelligence.</p>
+                <p class="hero-subtitle">Professional image enhancement, background removal, and creative transformations powered by cutting-edge artificial intelligence.</p>
                 <div class="hero-actions">
-                    <a href="/upload.html" class="btn btn-primary btn-large" id="heroUpload">Start Creating</a>
-                    <a href="#features" class="btn btn-outline btn-large">Learn More</a>
+                    <button class="btn btn-primary btn-large" id="heroStart">Start Creating</button>
+                    <button class="btn btn-outline btn-large" onclick="scrollToFeatures()">Learn More</button>
                 </div>
             </div>
-        </section>
-
-        <section id="features" class="features">
-            <div class="features-container">
-                <h2 class="section-title">Choose Your AI Tool</h2>
-                <div class="tools-grid">
-                    <div class="tool-card" data-tool="restore">
-                        <div class="tool-icon">🔧</div>
-                        <h3 class="tool-title">AI Image Restore</h3>
-                        <p class="tool-description">Enhance and restore old or damaged images with advanced AI algorithms.</p>
-                        <div class="tool-cost">1 Credit</div>
-                        <button class="btn btn-primary tool-btn" data-redirect="/tools/image_enhancer.html">Try Now</button>
-                    </div>
-
-                    <div class="tool-card" data-tool="remove_bg">
-                        <div class="tool-icon">🖼️</div>
-                        <h3 class="tool-title">Background Removal</h3>
-                        <p class="tool-description">Remove backgrounds instantly with precision AI detection.</p>
-                        <div class="tool-cost">1 Credit</div>
-                        <button class="btn btn-primary tool-btn" data-redirect="/tools/remove_bg.html">Try Now</button>
-                    </div>
-
-                    <div class="tool-card" data-tool="remove_obj">
-                        <div class="tool-icon">✂️</div>
-                        <h3 class="tool-title">Object Removal</h3>
-                        <p class="tool-description">Remove unwanted objects seamlessly from your images.</p>
-                        <div class="tool-cost">1 Credit</div>
-                        <button class="btn btn-primary tool-btn" data-redirect="/tools/remove_obj.html">Try Now</button>
-                    </div>
-
-                    <div class="tool-card" data-tool="enhance">
-                        <div class="tool-icon">✨</div>
-                        <h3 class="tool-title">Image Enhancement</h3>
-                        <p class="tool-description">Improve image quality with AI-powered enhancement.</p>
-                        <div class="tool-cost">1 Credit</div>
-                        <button class="btn btn-primary tool-btn" data-redirect="/tools/image_enhancer.html">Try Now</button>
-                    </div>
-
-                    <div class="tool-card" data-tool="replace_bg">
-                        <div class="tool-icon">🌈</div>
-                        <h3 class="tool-title">Background Replace</h3>
-                        <p class="tool-description">Replace backgrounds with AI-generated scenes.</p>
-                        <div class="tool-cost">2 Credits</div>
-                        <button class="btn btn-primary tool-btn" data-redirect="/tools/replace_bg.html">Try Now</button>
-                    </div>
-
-                    <div class="tool-card" data-tool="generative_fill">
-                        <div class="tool-icon">🎨</div>
-                        <h3 class="tool-title">Generative Fill</h3>
-                        <p class="tool-description">Fill areas with AI-generated content matching your description.</p>
-                        <div class="tool-cost">3 Credits</div>
-                        <button class="btn btn-primary tool-btn" data-redirect="/tools/generative_fill.html">Try Now</button>
-                    </div>
+            <div class="hero-image">
+                <div class="image-showcase">
+                    <div class="showcase-card">✨ AI Enhancement</div>
+                    <div class="showcase-card">🖼️ Background Removal</div>
+                    <div class="showcase-card">🎨 Creative Fill</div>
                 </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section class="stats">
-            <div class="stats-container">
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2 class="section-title">Powerful AI Tools</h2>
+            <div class="features-grid">
+                <div class="feature-card" data-tool="restore">
+                    <div class="feature-icon">🔧</div>
+                    <h3>AI Image Restore</h3>
+                    <p>Enhance and restore old or damaged images with advanced AI algorithms.</p>
+                    <div class="feature-cost">1 Credit</div>
+                </div>
+                <div class="feature-card" data-tool="remove_bg">
+                    <div class="feature-icon">🖼️</div>
+                    <h3>Background Removal</h3>
+                    <p>Remove backgrounds instantly with precision AI detection.</p>
+                    <div class="feature-cost">1 Credit</div>
+                </div>
+                <div class="feature-card" data-tool="enhance">
+                    <div class="feature-icon">✨</div>
+                    <h3>Image Enhancement</h3>
+                    <p>Improve image quality with AI-powered enhancement.</p>
+                    <div class="feature-cost">1 Credit</div>
+                </div>
+                <div class="feature-card" data-tool="replace_bg">
+                    <div class="feature-icon">🌈</div>
+                    <h3>Background Replace</h3>
+                    <p>Replace backgrounds with AI-generated scenes.</p>
+                    <div class="feature-cost">2 Credits</div>
+                </div>
+                <div class="feature-card" data-tool="generative_fill">
+                    <div class="feature-icon">🎨</div>
+                    <h3>Generative Fill</h3>
+                    <p>Fill areas with AI-generated content matching your description.</p>
+                    <div class="feature-cost">3 Credits</div>
+                </div>
+                <div class="feature-card" data-tool="remove_obj">
+                    <div class="feature-icon">✂️</div>
+                    <h3>Object Removal</h3>
+                    <p>Remove unwanted objects seamlessly from your images.</p>
+                    <div class="feature-cost">1 Credit</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid">
                 <div class="stat-item">
                     <div class="stat-number">1M+</div>
                     <div class="stat-label">Images Processed</div>
@@ -132,38 +129,37 @@
                     <div class="stat-label">Uptime</div>
                 </div>
             </div>
-        </section>
-    </main>
+        </div>
+    </section>
 
+    <!-- Footer -->
     <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-section">
-                <div class="footer-brand">
-                    <img src="/assets/images/logo.png" alt="SSnapify" class="footer-logo">
-                    <span class="footer-title">SSnapify</span>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>SSnapify</h3>
+                    <p>AI-powered image enhancement for everyone.</p>
                 </div>
-                <p class="footer-description">AI-powered image enhancement for everyone.</p>
+                <div class="footer-section">
+                    <h4>Product</h4>
+                    <a href="/pricing.html">Pricing</a>
+                    <a href="/support.html">Support</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <a href="/privacy.html">Privacy Policy</a>
+                    <a href="/terms.html">Terms of Service</a>
+                </div>
             </div>
-            <div class="footer-section">
-                <h4 class="footer-heading">Product</h4>
-                <a href="#features" class="footer-link">Features</a>
-                <a href="/pricing.html" class="footer-link">Pricing</a>
-                <a href="/dashboard.html" class="footer-link">Dashboard</a>
-            </div>
-            <div class="footer-section">
-                <h4 class="footer-heading">Support</h4>
-                <a href="/support.html" class="footer-link">Help Center</a>
-                <a href="/privacy.html" class="footer-link">Privacy</a>
-                <a href="/terms.html" class="footer-link">Terms</a>
+            <div class="footer-bottom">
+                <p>&copy; 2025 SSnapify. All rights reserved.</p>
             </div>
         </div>
     </footer>
 
-    <script src="/js/config.js"></script>
-    <script src="/js/api.js"></script>
-    <script src="/js/utils.js"></script>
-    <script src="/js/theme.js"></script>
-    <script src="/js/index.js"></script>
-    
+    <!-- Scripts -->
+    <script src="/js/core.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/main.js"></script>
 </body>
 </html>
