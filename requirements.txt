@@ -24,20 +24,12 @@ cloudinary==1.36.0        # Cloudinary SDK for AI features
 httpx==0.25.2             # Async HTTP client
 
 itsdangerous
-pydantic_settings
 APScheduler>=3.10,<4.0
 redis python-decouple
 
 
 
-uvicorn[standard]
 python-multipart
-sqlalchemy
-cloudinary
-pydantic-settings
-redis
 authlib
 requests
-passlib[bcrypt]
-python-jose[cryptography]
 itsdangerous
