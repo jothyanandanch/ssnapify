@@ -108,7 +108,6 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="public"), name="static")
 app.mount("/styles", StaticFiles(directory="public/styles"), name="styles")
 app.mount("/js", StaticFiles(directory="public/js"), name="js")
-app.mount("/assets", StaticFiles(directory="public/assets"), name="assets")
 
 # API Routers
 auth_router = APIRouter(prefix="/auth", tags=["Authentication"])
