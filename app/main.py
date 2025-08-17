@@ -373,6 +373,46 @@ async def apply_transformation(
         raise HTTPException(status_code=500, detail=f"Transformation failed: {str(e)}")
 
 # ------------ Account, Admin, Support, and Health routes omitted for brevity (you already have these, keep as is) ------------
+@account_router.get("/credits")
+def get_user_credits(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get user's credit information with reset logic applied.
+    """
+    # Apply pending account resets/expirations, if any
+    current_utc = now_utc()
+    changed = False
+    if handle_expiration(current_user, current_utc):
+        changed = True
+    if apply_monthly_reset(current_user, current_utc):
+        changed = True
+    if changed:
+        db.commit()
+
+    plan_spec = PLANS.get(current_user.plan_id, PLANS[FREE_PLAN_ID])
+    days_until_reset = 30
+    if current_user.billing_anchor_utc and current_user.plan_id != FREE_PLAN_ID:
+        from app.billing.resets import compute_paid_cycle_start
+        from app.billing.timeutils import add_calendar_months
+        cycle_start = compute_paid_cycle_start(current_user.billing_anchor_utc, current_utc)
+        next_cycle = add_calendar_months(cycle_start, 1)
+        days_until_reset = (next_cycle - current_utc).days
+    else:
+        from app.billing.timeutils import start_of_utc_month, add_calendar_months
+        current_month_start = start_of_utc_month(current_utc)
+        next_month_start = add_calendar_months(current_month_start, 1)
+        days_until_reset = (next_month_start - current_utc).days
+
+    return {
+        "credit_balance": current_user.credit_balance,
+        "plan_id": current_user.plan_id,
+        "plan_name": ["Unknown", "Free", "Pro Monthly", "Pro 6-Months"][current_user.plan_id]
+        if current_user.plan_id <= 3 else "Unknown",
+        "days_until_next_reset": max(0, days_until_reset),
+        "billing_cycle_ends": getattr(current_user, "plan_expires_at", None),
+    }
 
 # --------- Static and Error Handling ---------
 @app.get("/")
