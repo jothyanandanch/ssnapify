@@ -801,3 +801,8 @@ if __name__ == "__main__":
         reload=True,
         log_level="info"
     )
+
+
+
+# Add this at the very end of your main.py file
+app_instance = app  # Export for Vercel

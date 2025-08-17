@@ -5,10 +5,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     # Database
-    database_url: str
+    postgres_url: str
     postgres_user: str
     postgres_password: str
-    postgres_db: str
+    postgres_database: str
 
     # Security / JWT
     secret_key: str
@@ -27,9 +27,6 @@ class Settings(BaseSettings):
 
     # Redis
     redis_url: str = "redis://localhost:6379/0"
-    redis_host: str = "localhost"
-    redis_port: int = 6379
-    redis_db: int = 0
-    redis_password: str = ""
+    
 
 settings = Settings()

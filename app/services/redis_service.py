@@ -1,39 +1,42 @@
 import redis
 import json
+import os
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 from app.config import settings
 
 class RedisService:
     def __init__(self):
+        self.redis_client = None
+        self.connect()
+    
+    def connect(self):
         try:
-            self.redis_client = redis.Redis(
-                host=settings.redis_host,
-                port=settings.redis_port,
-                db=settings.redis_db,
-                password=settings.redis_password if settings.redis_password else None,
-                decode_responses=True,
-                socket_connect_timeout=5,
-                socket_timeout=5,
-                retry_on_timeout=True
-            )
-            # Test connection
-            self.redis_client.ping()
-            self.available = True
-            print("✅ Redis connected successfully")
+            redis_url = os.getenv("REDIS_URL")
+            if redis_url:
+                self.redis_client = redis.from_url(
+                    redis_url, 
+                    decode_responses=True,
+                    socket_connect_timeout=5,
+                    socket_timeout=5,
+                    retry_on_timeout=True
+                )
+                # Test connection
+                self.redis_client.ping()
+                print("✅ Redis connected successfully")
+            else:
+                print("⚠️ No Redis URL provided")
         except Exception as e:
-            print(f"⚠️  Redis connection failed: {e}")
-            print("📝 Token blacklisting will be disabled (logout will be client-side only)")
+            print(f"⚠️ Redis connection failed: {e}")
             self.redis_client = None
-            self.available = False
-        
+    
     def ping(self) -> bool:
-        """Test Redis connection"""
-        if not self.available:
-            return False
         try:
-            return self.redis_client.ping()
-        except Exception:
+            if self.redis_client:
+                self.redis_client.ping()
+                return True
+            return False
+        except:
             return False
     
     def blacklist_token(self, token: str, expires_in_minutes: int = None) -> bool:
