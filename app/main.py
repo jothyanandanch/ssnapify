@@ -373,6 +373,31 @@ async def apply_transformation(
         raise HTTPException(status_code=500, detail=f"Transformation failed: {str(e)}")
 
 # ------------ Account, Admin, Support, and Health routes omitted for brevity (you already have these, keep as is) ------------
+@account_router.get("/credits")
+def get_user_credits(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Apply any pending resets and expirations
+    current_time = now_utc()
+    changed = False
+    if apply.billing_reset_or_expiration_logic:  # Replace with your actual functions
+        changed = True  # Adjust based on your logic
+    if changed:
+        db.commit()
+    
+    plan = PLANS.get(current_user.plan_id, PLANS[FREE_PLAN_ID])
+    
+    # Calculate days until next reset, etc.
+    days_until_reset = 30  # example fixed value
+    
+    return {
+        "credit_balance": current_user.credit_balance,
+        "plan_id": current_user.plan_id,
+        "plan_name": plan.name,
+        "days_until_next_reset": days_until_reset,
+        "billing_cycle_end": current_user.plan_expires_at,
+    }
 
 # --------- Static and Error Handling ---------
 @app.get("/")
