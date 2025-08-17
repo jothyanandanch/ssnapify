@@ -96,7 +96,8 @@ app.add_middleware(
     allow_origins=[
         "https://ssnapify.vercel.app",  # Production frontend URL
         "http://localhost:3000",         # Local development (optional)
-        "http://127.0.0.1:3000"
+        "http://127.0.0.1:3000",
+        "https://ssnapify-jothyanandanchs-projects.vercel.app"
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "DELETE", "PUT"],
