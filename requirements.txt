@@ -25,7 +25,8 @@ httpx==0.25.2             # Async HTTP client
 
 itsdangerous
 APScheduler>=3.10,<4.0
-redis python-decouple
+redis 
+python-decouple
 
 
 
