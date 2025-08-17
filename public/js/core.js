@@ -71,40 +71,55 @@ class Core {
     }
 
     // API Calls
-    async apiCall(endpoint, options = {}) {
-        const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
-        
-        const defaultOptions = {
-            headers: {
-                'Content-Type': 'application/json',
-                ...(this.getToken() && { 'Authorization': `Bearer ${this.getToken()}` })
-            }
-        };
-
-        const finalOptions = {
-            ...defaultOptions,
-            ...options,
-            headers: {
-                ...defaultOptions.headers,
-                ...options.headers
-            }
-        };
-
-        try {
-            const response = await fetch(url, finalOptions);
-            
-            if (response.status === 401) {
-                this.removeToken();
-                window.location.href = '/login.html';
-                return null;
-            }
-
-            return response;
-        } catch (error) {
-            console.error('API call failed:', error);
-            throw error;
-        }
+    // Update this in your core.js
+// In your core.js file, make sure this is correct:
+async apiCall(endpoint, options = {}) {
+    const url = endpoint.startsWith('http') ? endpoint : `${this.baseURL}${endpoint}`;
+    
+    const defaultHeaders = {};
+    
+    // CRITICAL: Only set JSON content-type if body is NOT FormData
+    if (options.body && !(options.body instanceof FormData)) {
+        defaultHeaders['Content-Type'] = 'application/json';
     }
+    
+    // Always add auth header if available
+    if (this.getToken()) {
+        defaultHeaders['Authorization'] = `Bearer ${this.getToken()}`;
+    }
+
+    const finalOptions = {
+        ...options,
+        headers: {
+            ...defaultHeaders,
+            ...options.headers
+        }
+    };
+
+    console.log('🌐 API Call:', {
+        method: finalOptions.method || 'GET',
+        url: url,
+        headers: finalOptions.headers,
+        bodyType: finalOptions.body ? finalOptions.body.constructor.name : 'none'
+    });
+
+    try {
+        const response = await fetch(url, finalOptions);
+        
+        if (response.status === 401) {
+            console.warn('🔒 Unauthorized - removing token');
+            this.removeToken();
+            window.location.href = '/login.html';
+            return null;
+        }
+
+        return response;
+    } catch (error) {
+        console.error('💥 API call failed:', error);
+        throw error;
+    }
+}
+
 
     // User Data
     async fetchUserData() {

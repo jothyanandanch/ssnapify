@@ -210,3 +210,99 @@
     color: #94a3b8;
     margin-bottom: 1.5rem;
 }
+
+
+/* Tools Section */
+.tools-section {
+    margin-bottom: 3rem;
+}
+
+.tools-section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+}
+
+.tools-section p {
+    color: #64748b;
+    margin-bottom: 2rem;
+}
+
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.tool-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s;
+    border: 2px solid transparent;
+}
+
+.tool-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-color: #3b82f6;
+}
+
+.tool-icon {
+    font-size: 2.5rem;
+    padding: 1rem;
+    background: #eff6ff;
+    border-radius: 0.5rem;
+    flex-shrink: 0;
+}
+
+.tool-content {
+    flex: 1;
+}
+
+.tool-content h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.tool-content p {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.tool-cost {
+    display: inline-block;
+    background: #eff6ff;
+    color: #3b82f6;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .tools-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .tool-card {
+        padding: 1rem;
+    }
+    
+    .tool-icon {
+        font-size: 2rem;
+        padding: 0.75rem;
+    }
+}

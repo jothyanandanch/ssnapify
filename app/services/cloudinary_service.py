@@ -6,16 +6,18 @@ import cloudinary.api
 from cloudinary import CloudinaryImage
 import os
 from typing import Optional, Dict, Any
+from app.config import settings
 
 class CloudinaryService:
     def __init__(self):
         # Configure Cloudinary with environment variables
         cloudinary.config(
-            cloudinary_cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
-            cloudinary_api_key=os.getenv('CLOUDINARY_API_KEY'),
-            cloudinary_api_secret=os.getenv('CLOUDINARY_API_SECRET'),
-            secure=True
+            cloud_name = settings.cloudinary_cloud_name,
+            api_key = settings.cloudinary_api_key,
+            api_secret = settings.cloudinary_api_secret,
+            secure = True
         )
+
     
     def upload_image(self, file_content: bytes, public_id: str, folder: str = "ssnapify", **options) -> Dict[str, Any]:
         """Upload an image to Cloudinary"""

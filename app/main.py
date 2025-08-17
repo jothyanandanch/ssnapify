@@ -41,7 +41,7 @@ from app.models.schemas import UserOut, ImageOut, UserCreate, Token
 # Configuration
 from app.config import settings
 import cloudinary.uploader
-import cloudinary.api
+
 
 
 # Lifespan events
@@ -59,14 +59,6 @@ async def lifespan(app: FastAPI):
         print("✅ Redis connected successfully")
     else:
         print("⚠️ Redis connection failed. Token blacklisting will not work.")
-    
-    # Test Cloudinary connection
-    try:
-        
-        cloudinary.api.ping()
-        print("✅ Cloudinary connected successfully")
-    except Exception as e:
-        print(f"⚠️ Cloudinary connection failed: {e}")
     
     # Start background billing scheduler
     start_scheduler()
@@ -106,7 +98,6 @@ app.mount("/static", StaticFiles(directory="public"), name="static")
 app.mount("/styles", StaticFiles(directory="public/styles"), name="styles")
 app.mount("/js", StaticFiles(directory="public/js"), name="js")
 app.mount("/assets", StaticFiles(directory="public/assets"), name="assets")
-app.mount("/tools", StaticFiles(directory="public/tools"), name="tools")
 
 
 # API Routers
@@ -249,24 +240,39 @@ def get_all_users(
 # IMAGES ROUTES
 # ============================================================================
 
+
 @images_router.post("/", response_model=ImageOut)
 async def upload_image(
     file: UploadFile = File(...),
-    title: str = Form(None),
+    title: str = Form(""),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Upload an image"""
+    """Upload an image with detailed error handling"""
     try:
+        print(f"📥 Upload Request:")
+        print(f"  User: {current_user.email}")
+        print(f"  File: {file.filename}")
+        print(f"  Content-Type: {file.content_type}")
+        print(f"  Size: {getattr(file, 'size', 'unknown')}")
+        print(f"  Title: '{title}'")
+
+        # Validate file exists and has content
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No file provided")
+
         # Validate file type
-        if not file.content_type.startswith('image/'):
-            raise HTTPException(status_code=400, detail="File must be an image")
-        
-        
-        
+        if not file.content_type or not file.content_type.startswith('image/'):
+            print(f"❌ Invalid content type: {file.content_type}")
+            raise HTTPException(status_code=400, detail=f"File must be an image. Received: {file.content_type}")
+
         # Read file content
         file_content = await file.read()
-        
+        if len(file_content) == 0:
+            raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+        print(f"📄 File content read: {len(file_content)} bytes")
+
         # Upload to Cloudinary
         upload_result = cloudinary.uploader.upload(
             file_content,
@@ -274,26 +280,35 @@ async def upload_image(
             folder="ssnapify/originals",
             resource_type="image"
         )
-        
-        # Save to database using your Image model
+
+        print(f"☁️ Cloudinary upload successful: {upload_result['public_id']}")
+
+        # Save to database
         image = Image(
             user_id=current_user.id,
             public_id=upload_result['public_id'],
             secure_url=upload_result['secure_url'],
-            title=title or file.filename,
-            transformation_type=None,  # Original image
+            title=title or file.filename or "Untitled",
+            transformation_type=None,
             config=None
         )
-        
+
         db.add(image)
         db.commit()
         db.refresh(image)
-        
+
+        print(f"💾 Database save successful: ID {image.id}")
         return image
-        
+
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"Upload error: {e}")
+        print(f"❌ Upload error: {type(e).__name__}: {e}")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+
+
+
 
 @images_router.get("/", response_model=List[ImageOut])
 def get_user_images(
@@ -437,7 +452,8 @@ async def apply_transformation(
     cost: int,
     prompt: str = None
 ):
-    """Helper function to apply image transformations using your billing system"""
+    """Helper function to apply image transformations using correct effect names"""
+    
     # Get original image
     image = db.query(Image).filter(
         Image.id == image_id,
@@ -446,57 +462,81 @@ async def apply_transformation(
     
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
-    
+
     # Use your billing enforcement
     ensure_credits_or_admin(current_user, db, cost)
-    
+
     try:
-        # Apply transformation using Cloudinary
-        import cloudinary.uploader
+        print(f"🎨 Applying transformation: {transformation}")
         
-        # Define transformation parameters based on type
-        transform_params = {
-            "restore": {"effect": "improve"},
-            "remove_bg": {"background_removal": "cloudinary_ai"},
-            "remove_obj": {"effect": "generative_remove"},
-            "enhance": {"effect": "enhance"},
-            "generative_fill": {"effect": "generative_fill", "prompt": prompt} if prompt else {"effect": "generative_fill"},
-            "replace_bg": {"effect": "gen_background_replace", "prompt": prompt} if prompt else {"effect": "gen_background_replace"}
-        }
+        from cloudinary.utils import cloudinary_url
         
-        # Apply transformation
-        if transformation in transform_params:
-            transformed_result = cloudinary.uploader.upload(
-                image.secure_url,
-                public_id=f"transformed_{transformation}_{image.public_id}",
-                folder="ssnapify/transformed",
-                transformation=transform_params[transformation]
-            )
+        # Define CORRECT transformation parameters based on type
+        transform_options = {}
+        
+        if transformation == "restore":
+            # Use generative_restore for AI restoration, not improve
+            transform_options = {"effect": "gen_restore"}
+        elif transformation == "remove_bg":
+            # This one works - keep as is
+            transform_options = {"effect": "background_removal"}
+        elif transformation == "remove_obj":
+            # CORRECT: Use gen_remove, not generative_remove
+            transform_options = {"effect": "gen_remove"}
+        elif transformation == "enhance":
+            # Use enhance effect (different from improve)
+            transform_options = {"effect": "enhance"}
+        elif transformation == "generative_fill":
+            # CORRECT: Use gen_fill, not generative_fill
+            if prompt:
+                transform_options = {"effect": "gen_fill", "prompt": prompt}
+            else:
+                transform_options = {"effect": "gen_fill"}
+        elif transformation == "replace_bg":
+            # CORRECT: Use gen_background_replace
+            if prompt:
+                transform_options = {"effect": "gen_background_replace", "prompt": prompt}
+            else:
+                transform_options = {"effect": "gen_background_replace"}
         else:
             raise HTTPException(status_code=400, detail="Invalid transformation type")
+
+        print(f"📋 Transformation params: {transform_options}")
         
-        # Create new image record for transformed image
+        # Generate the transformation URL
+        transformed_url, _ = cloudinary_url(
+            image.public_id,
+            **transform_options,
+            secure=True
+        )
+        
+        print(f"🔗 Generated transformation URL: {transformed_url}")
+        
+        # Create new image record with the transformation URL directly
+        # No need to re-upload for most effects
         new_image = Image(
             user_id=current_user.id,
-            public_id=transformed_result['public_id'],
-            secure_url=transformed_result['secure_url'],
+            public_id=f"transformed_{transformation}_{image.public_id.replace('/', '_')}",
+            secure_url=transformed_url,
             title=f"{transformation.replace('_', ' ').title()} - {image.title}",
             transformation_type=transformation,
             config={"original_image_id": image.id, "prompt": prompt} if prompt else {"original_image_id": image.id}
         )
-        
+
         db.add(new_image)
         db.commit()
         db.refresh(new_image)
         
+        print(f"✅ Transformation complete: {transformed_url}")
         return new_image
-        
+
     except Exception as e:
-        print(f"Transformation error: {e}")
+        print(f"❌ Transformation error: {type(e).__name__}: {e}")
         # Rollback credit deduction if transformation failed
         current_user.credit_balance += cost
         db.commit()
         raise HTTPException(status_code=500, detail=f"Transformation failed: {str(e)}")
+
 
 # ============================================================================
 # ACCOUNT ROUTES
@@ -751,6 +791,10 @@ async def custom_404_handler(request: Request, exc):
             status_code=404,
             content={"error": "Page not found", "detail": "The requested resource was not found"}
         )
+
+
+
+
 
 @app.exception_handler(500)
 async def custom_500_handler(request: Request, exc):

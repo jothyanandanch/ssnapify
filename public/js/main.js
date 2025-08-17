@@ -13,7 +13,7 @@ function setupHeroActions() {
             e.preventDefault();
             
             if (auth.isLoggedIn()) {
-                window.location.href = '/upload.html';
+                window.location.href = '/dashboard.html';
             } else {
                 core.showToast('Please log in to start creating', 'info');
                 setTimeout(() => {
@@ -27,13 +27,28 @@ function setupHeroActions() {
 function setupFeatureCards() {
     const featureCards = document.querySelectorAll('.feature-card');
     
+    // Tool URL mapping - Updated to use individual tool pages
+    const toolUrls = {
+        'restore': '/restore.html',
+        'remove_bg': '/remove_bg.html',
+        'enhance': '/enhance.html',
+        'remove_obj': '/remove_obj.html',
+        'replace_bg': '/replace_bg.html',
+        'generative_fill': '/generative_fill.html'
+    };
+    
     featureCards.forEach(card => {
         card.addEventListener('click', () => {
             const tool = card.dataset.tool;
+            const toolUrl = toolUrls[tool];
             
             if (auth.isLoggedIn()) {
-                // Redirect to specific tool or upload page
-                window.location.href = '/upload.html';
+                if (toolUrl) {
+                    window.location.href = toolUrl;
+                } else {
+                    // Fallback to upload page
+                    window.location.href = '/upload.html';
+                }
             } else {
                 core.showToast('Please log in to use AI tools', 'info');
                 setTimeout(() => {

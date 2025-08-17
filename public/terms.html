@@ -3,226 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terms of Service - SSnapify</title>
-    <link rel="stylesheet" href="/styles/base.css">
-    <link rel="stylesheet" href="/styles/layout.css">
-    <link rel="stylesheet" href="/styles/components.css">
-    <link rel="stylesheet" href="/styles/theme.css">
-    <link rel="stylesheet" href="/styles/responsive.css">
-    <script src="/js/auth.js"></script>
-    <link rel="stylesheet" href="/styles/nav.css">
-    <link rel="stylesheet" href="/styles/components.css">
-
+    <title>Support - SSnapify</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/support.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Navigation -->
     <nav class="navbar">
         <div class="nav-container">
             <div class="nav-brand">
-                <img src="/assets/images/logo.png" alt="SSnapify" class="nav-logo">
-                <span class="nav-title">SSnapify</span>
+                <h2>SSnapify</h2>
             </div>
             <div class="nav-menu">
                 <a href="/index.html" class="nav-link">Home</a>
+                <a href="/dashboard.html" class="nav-link">Dashboard</a>
                 <a href="/pricing.html" class="nav-link">Pricing</a>
-                <a href="/support.html" class="nav-link">Support</a>
-                <a href="/login.html" class="btn btn-primary">Login</a>
+                <a href="/support.html" class="nav-link active">Support</a>
             </div>
-            <button class="theme-toggle" id="themeToggle">🌙</button>
+            <div class="nav-user" id="navUser">
+                <div class="user-dropdown">
+                    <button class="user-btn" id="userBtn">
+                        <span id="userName">User</span>
+                    </button>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <div class="user-info">
+                            <span id="userCredits">-- Credits</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item logout-btn" id="logoutBtn">Logout</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </nav>
 
-    <main class="legal-main">
-        <div class="legal-container">
-            <div class="legal-header">
-                <h1 class="legal-title">Terms of Service</h1>
-                <p class="legal-subtitle">Last updated: August 15, 2025</p>
-            </div>
+    <!-- Support Header -->
+    <section class="support-header">
+        <div class="container">
+            <h1>Help & Support</h1>
+            <p>Get help with SSnapify or contact our support team</p>
+        </div>
+    </section>
 
-            <div class="legal-content">
-                <section class="legal-section">
-                    <h2>Acceptance of Terms</h2>
-                    <p>By accessing and using SSnapify, you accept and agree to be bound by the terms and provision of this agreement.</p>
-                </section>
+    <!-- Main Content -->
+    <main class="support-page">
+        <div class="container">
+            <!-- Quick Help -->
+            <section class="quick-help">
+                <h2>How can we help you?</h2>
+                <div class="help-grid">
+                    <div class="help-card">
+                        <div class="help-icon">💳</div>
+                        <h3>Billing & Credits</h3>
+                        <p>Questions about plans, credits, or payments</p>
+                        <a href="/pricing.html" class="btn btn-outline">View Pricing</a>
+                    </div>
+                    <div class="help-card">
+                        <div class="help-icon">🛠️</div>
+                        <h3>Tool Issues</h3>
+                        <p>Having trouble with AI transformations</p>
+                        <button class="btn btn-outline" onclick="scrollToContact()">Contact Support</button>
+                    </div>
+                    <div class="help-card">
+                        <div class="help-icon">👤</div>
+                        <h3>Account Help</h3>
+                        <p>Login, profile, or account settings</p>
+                        <a href="/dashboard.html" class="btn btn-outline">Go to Dashboard</a>
+                    </div>
+                </div>
+            </section>
 
-                <section class="legal-section">
-                    <h2>Service Description</h2>
-                    <p>SSnapify is an AI-powered image enhancement and transformation service that allows users to:</p>
-                    <ul>
-                        <li>Upload and process images using artificial intelligence</li>
-                        <li>Remove backgrounds and objects from images</li>
-                        <li>Enhance image quality and apply creative transformations</li>
-                        <li>Generate new content using AI algorithms</li>
-                    </ul>
-                </section>
+            <!-- FAQ Section -->
+            <section class="faq-section">
+                <h2>Frequently Asked Questions</h2>
+                <div class="faq-search">
+                    <input type="text" id="faqSearch" placeholder="Search FAQs..." class="search-input">
+                </div>
+                
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <h4>How do credits work?</h4>
+                        <p>Credits are used to perform AI transformations on your images. Different tools consume different amounts of credits:</p>
+                        <ul>
+                            <li>AI Restore, Background Removal, Object Removal, Enhancement: 1 credit each</li>
+                            <li>Background Replacement: 2 credits</li>
+                            <li>Generative Fill: 3 credits</li>
+                        </ul>
+                        <p>Credits reset monthly on your billing date.</p>
+                    </div>
 
-                <section class="legal-section">
-                    <h2>User Accounts</h2>
-                    <p><strong>Registration:</strong> You must create an account using Google OAuth to access our services.</p>
-                    <p><strong>Account Security:</strong> You are responsible for maintaining the security of your account and password.</p>
-                    <p><strong>Account Termination:</strong> We reserve the right to terminate accounts that violate these terms.</p>
-                </section>
+                    <div class="faq-item">
+                        <h4>What image formats are supported?</h4>
+                        <p>We support all major image formats including:</p>
+                        <ul>
+                            <li>JPEG (.jpg, .jpeg)</li>
+                            <li>PNG (.png)</li>
+                            <li>GIF (.gif)</li>
+                            <li>WebP (.webp)</li>
+                        </ul>
+                        <p>Maximum file size is 10MB per image.</p>
+                    </div>
 
-                <section class="legal-section">
-                    <h2>Credits and Billing</h2>
-                    <p><strong>Credit System:</strong> Our service operates on a credit-based system where different AI transformations consume different amounts of credits.</p>
-                    <p><strong>Free Plan:</strong> Includes 50 credits per month with monthly reset.</p>
-                    <p><strong>Paid Plans:</strong> Subscription plans provide additional credits and features.</p>
-                    <p><strong>Refunds:</strong> Refunds are provided according to our refund policy. Contact support for assistance.</p>
-                </section>
+                    <div class="faq-item">
+                        <h4>How can I upgrade my plan?</h4>
+                        <p>You can upgrade your plan anytime from the Pricing page. Choose between:</p>
+                        <ul>
+                            <li>Pro Monthly: $9.99/month for 500 credits</li>
+                            <li>Pro 6-Month: $49.99/6 months for 500 credits per month (17% savings)</li>
+                        </ul>
+                        <p>Upgrades are effective immediately and unused credits carry over.</p>
+                    </div>
 
-                <section class="legal-section">
-                    <h2>Content and Usage</h2>
-                    <p><strong>Your Content:</strong> You retain ownership of images you upload to our service.</p>
-                    <p><strong>License to Process:</strong> By uploading images, you grant us permission to process them using our AI services.</p>
-                    <p><strong>Prohibited Content:</strong> You may not upload content that is:</p>
-                    <ul>
-                        <li>Illegal or violates any laws</li>
-                        <li>Infringes on intellectual property rights</li>
-                        <li>Contains harmful, offensive, or inappropriate material</li>
-                        <li>Violates privacy rights of others</li>
-                    </ul>
-                </section>
+                    <div class="faq-item">
+                        <h4>Is my data secure?</h4>
+                        <p>Yes! We take your privacy seriously:</p>
+                        <ul>
+                            <li>Images are processed securely using Cloudinary's infrastructure</li>
+                            <li>We don't share your images with third parties</li>
+                            <li>You can delete your images anytime</li>
+                            <li>We use Google OAuth for secure authentication</li>
+                        </ul>
+                    </div>
 
-                <section class="legal-section">
-                    <h2>Intellectual Property</h2>
-                    <p><strong>Our IP:</strong> SSnapify and its original content, features, and functionality are owned by us and protected by intellectual property laws.</p>
-                    <p><strong>AI Models:</strong> The AI technologies and algorithms used in our service are proprietary or licensed.</p>
-                    <p><strong>Generated Content:</strong> You own the rights to images processed through our service, subject to our license terms.</p>
-                </section>
+                    <div class="faq-item">
+                        <h4>How long does processing take?</h4>
+                        <p>Processing times vary by transformation type:</p>
+                        <ul>
+                            <li>Basic enhancements: 5-15 seconds</li>
+                            <li>Background removal/replacement: 10-30 seconds</li>
+                            <li>Generative fill: 30-60 seconds</li>
+                        </ul>
+                        <p>Processing may take longer during peak usage times.</p>
+                    </div>
+                </div>
+            </section>
 
-                <section class="legal-section">
-                    <h2>Limitations and Disclaimers</h2>
-                    <p><strong>Service Availability:</strong> We strive for 99.9% uptime but cannot guarantee uninterrupted service.</p>
-                    <p><strong>AI Accuracy:</strong> AI processing results may vary and are not guaranteed to meet specific expectations.</p>
-                    <p><strong>Data Loss:</strong> While we implement backup systems, you should maintain your own copies of important images.</p>
-                </section>
+            <!-- Contact Form -->
+            <section class="contact-section" id="contactSection">
+                <div class="contact-card">
+                    <div class="contact-header">
+                        <h2>Still need help?</h2>
+                        <p>Send us a message and we'll get back to you within 24 hours</p>
+                    </div>
 
-                <section class="legal-section">
-                    <h2>Privacy and Data Protection</h2>
-                    <p>Your privacy is important to us. Please review our <a href="/privacy.html">Privacy Policy</a> for information about how we collect, use, and protect your data.</p>
-                </section>
+                    <form id="supportForm" class="support-form">
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" name="name" required>
+                        </div>
 
-                <section class="legal-section">
-                    <h2>Termination</h2>
-                    <p>Either party may terminate this agreement at any time. Upon termination:</p>
-                    <ul>
-                        <li>Your access to the service will cease</li>
-                        <li>Your data may be deleted according to our retention policy</li>
-                        <li>Unused credits are forfeited</li>
-                    </ul>
-                </section>
+                        <div class="form-group">
+                            <label for="subject">Subject</label>
+                            <select id="subject" name="subject" required>
+                                <option value="">Select a topic</option>
+                                <option value="billing">Billing & Payment Issue</option>
+                                <option value="technical">Technical Problem</option>
+                                <option value="feature">Feature Request</option>
+                                <option value="account">Account Issue</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
 
-                <section class="legal-section">
-                    <h2>Changes to Terms</h2>
-                    <p>We reserve the right to modify these terms at any time. Users will be notified of significant changes via email or service notifications.</p>
-                </section>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" name="message" rows="5" placeholder="Please describe your issue or question in detail..." required></textarea>
+                        </div>
 
-                <section class="legal-section">
-                    <h2>Contact Information</h2>
-                    <p>For questions about these Terms of Service:</p>
-                    <ul>
-                        <li>Email: <a href="mailto:legal@ssnapify.com">legal@ssnapify.com</a></li>
-                        <li>Support: <a href="/support.html">Visit our Support Center</a></li>
-                    </ul>
-                </section>
-            </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Send Message</button>
+                        </div>
+                    </form>
+
+                    <div id="formStatus" class="form-status" style="display: none;"></div>
+                </div>
+            </section>
+
+            <!-- Contact Info -->
+            <section class="contact-info">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-icon">📧</div>
+                        <h3>Email Support</h3>
+                        <p>support@ssnapify.com</p>
+                        <small>Response within 24 hours</small>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">💬</div>
+                        <h3>Live Chat</h3>
+                        <p>Available 9 AM - 6 PM EST</p>
+                        <small>Monday to Friday</small>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-icon">📚</div>
+                        <h3>Documentation</h3>
+                        <p>Comprehensive guides</p>
+                        <small>Self-service help</small>
+                    </div>
+                </div>
+            </section>
         </div>
     </main>
 
-    <footer class="footer">
-        <div class="footer-container">
-            <div class="footer-section">
-                <div class="footer-brand">
-                    <img src="/assets/images/logo.png" alt="SSnapify" class="footer-logo">
-                    <span class="footer-title">SSnapify</span>
-                </div>
-                <p class="footer-description">AI-powered image enhancement for everyone.</p>
-            </div>
-            <div class="footer-section">
-                <h4 class="footer-heading">Legal</h4>
-                <a href="/privacy.html" class="footer-link">Privacy Policy</a>
-                <a href="/terms.html" class="footer-link">Terms of Service</a>
-            </div>
-        </div>
-    </footer>
-
-    <script src="/js/theme.js"></script>
-    
+    <script src="/js/core.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/support.js"></script>
 </body>
-<header class="main-header">
-    <nav class="navbar">
-        <div class="nav-brand">
-            <a href="/index.html">
-                <img src="/assets/images/logo.png" alt="SSnapify" class="logo">
-                SSnapify
-            </a>
-        </div>
-        <div class="nav-menu">
-            <a href="/index.html" class="nav-link">Home</a>
-            <a href="/dashboard.html" class="nav-link auth-required">Dashboard</a>
-            <a href="/gallery.html" class="nav-link auth-required">Gallery</a>
-            <a href="/upload.html" class="nav-link auth-required">Upload</a>
-            <a href="/pricing.html" class="nav-link">Pricing</a>
-            <a href="/support.html" class="nav-link">Support</a>
-        </div>
-        <div class="nav-auth" id="navAuth">
-            <a href="/login.html" class="btn btn-primary">Login with Google</a>
-        </div>
-        <div class="nav-user" id="navUser" style="display: none;">
-            <div class="user-dropdown">
-                <button class="user-avatar" id="userAvatar">
-                    <span id="userName">User</span>
-                    <span class="dropdown-arrow">▼</span>
-                </button>
-                <div class="dropdown-menu" id="dropdownMenu">
-                    <div class="user-info">
-                        <div id="userCredits">-- Credits</div>
-                    </div>
-                    <div class="dropdown-divider"></div>
-                    <a href="/dashboard.html" class="dropdown-item">Dashboard</a>
-                    <a href="/pricing.html" class="dropdown-item">Billing</a>
-                    <div id="adminSection" class="hidden">
-                        <div class="dropdown-divider"></div>
-                        <a href="/admin.html" class="dropdown-item">Admin Panel</a>
-                    </div>
-                    <div class="dropdown-divider"></div>
-                    <button id="logoutBtn" class="dropdown-item logout-btn">Logout</button>
-                </div>
-            </div>
-        </div>
-    </nav>
-</header>
-<footer class="footer">
-    <div class="footer-container">
-        <div class="footer-section">
-            <div class="footer-brand">
-                <img src="/assets/images/logo.png" alt="SSnapify" class="footer-logo">
-                <span class="footer-title">SSnapify</span>
-            </div>
-            <p class="footer-description">AI-powered image enhancement for everyone.</p>
-        </div>
-        <div class="footer-section">
-            <h4 class="footer-heading">Product</h4>
-            <a href="#features" class="footer-link">Features</a>
-            <a href="/pricing.html" class="footer-link">Pricing</a>
-            <a href="/dashboard.html" class="footer-link">Dashboard</a>
-        </div>
-        <div class="footer-section">
-            <h4 class="footer-heading">Support</h4>
-            <a href="/support.html" class="footer-link">Help Center</a>
-            <a href="/privacy.html" class="footer-link">Privacy</a>
-            <a href="/terms.html" class="footer-link">Terms</a>
-        </div>
-        <div class="footer-section">
-            <h4 class="footer-heading">Company</h4>
-            <a href="/index.html" class="footer-link">About</a>
-            <a href="/support.html" class="footer-link">Contact</a>
-        </div>
-    </div>
-    <div class="footer-bottom">
-        <p>&copy; 2025 SSnapify. All rights reserved.</p>
-    </div>
-</footer>
-
-
 </html>

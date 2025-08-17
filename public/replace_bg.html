@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Background Replace - SSnapify</title>
+    <link rel="stylesheet" href="/styles/main.css">
+    <link rel="stylesheet" href="/styles/tool.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <h2>SSnapify</h2>
+            </div>
+            <div class="nav-menu">
+                <a href="/index.html" class="nav-link">Home</a>
+                <a href="/dashboard.html" class="nav-link">Dashboard</a>
+                <a href="/gallery.html" class="nav-link">Gallery</a>
+            </div>
+            <div class="nav-user" id="navUser">
+                <div class="user-dropdown">
+                    <button class="user-btn" id="userBtn">
+                        <span id="userName">User</span>
+                    </button>
+                    <div class="dropdown-menu" id="dropdownMenu">
+                        <div class="user-info">
+                            <span id="userCredits">-- Credits</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <button class="dropdown-item logout-btn" id="logoutBtn">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Tool Header -->
+    <section class="tool-header">
+        <div class="container">
+            <div class="tool-info">
+                <div class="tool-icon">🌈</div>
+                <div class="tool-content">
+                    <h1>Background Replace</h1>
+                    <p>Replace backgrounds with AI-generated scenes</p>
+                    <div class="tool-cost">
+                        <span class="cost-badge">2 Credits per image</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="tool-page">
+        <div class="container">
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <div class="upload-zone" id="uploadZone">
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                    <div class="upload-content">
+                        <div class="upload-icon">📤</div>
+                        <h3>Upload Image for Background Replacement</h3>
+                        <p>Drag & drop or click to select an image</p>
+                        <button class="btn btn-primary" id="browseBtn">Choose Image</button>
+                        <div class="upload-info">
+                            <p>Supported: JPG, PNG, GIF, WebP • Max 10MB</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prompt Section -->
+            <div class="prompt-section" id="promptSection" style="display: none;">
+                <div class="prompt-card">
+                    <div class="image-preview">
+                        <img id="previewImage" src="" alt="Preview">
+                        <div class="preview-label">Your uploaded image</div>
+                    </div>
+                    <div class="prompt-input">
+                        <h3>Describe the New Background</h3>
+                        <p>Tell AI what kind of background you want to generate</p>
+                        <textarea 
+                            id="promptText" 
+                            placeholder="Example: a tropical beach with palm trees and blue ocean, sunset lighting"
+                            rows="4"
+                            maxlength="200"
+                        ></textarea>
+                        <div class="prompt-examples">
+                            <p><strong>Examples:</strong></p>
+                            <div class="example-prompts">
+                                <button class="example-btn" data-prompt="a modern office with glass windows and city view">Modern Office</button>
+                                <button class="example-btn" data-prompt="a beautiful forest with tall trees and sunlight streaming through">Forest Scene</button>
+                                <button class="example-btn" data-prompt="a cozy living room with fireplace and warm lighting">Cozy Interior</button>
+                                <button class="example-btn" data-prompt="a futuristic city skyline with neon lights at night">Futuristic City</button>
+                            </div>
+                        </div>
+                        <div class="prompt-actions">
+                            <button class="btn btn-outline" onclick="location.reload()">Choose Different Image</button>
+                            <button class="btn btn-primary" id="generateBtn">Generate Background</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Processing Section -->
+            <div class="processing-section" id="processingSection" style="display: none;">
+                <div class="processing-card">
+                    <div class="processing-spinner"></div>
+                    <h3>Generating New Background...</h3>
+                    <p id="processingStatus">Analyzing image...</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-header">
+                    <h2>Background Replaced Successfully!</h2>
+                    <p>Your image now has a beautiful AI-generated background</p>
+                </div>
+                
+                <div class="before-after">
+                    <div class="image-comparison">
+                        <div class="comparison-item">
+                            <h4>Before</h4>
+                            <div class="image-container">
+                                <img id="originalImage" src="" alt="Original">
+                            </div>
+                        </div>
+                        <div class="comparison-arrow">→</div>
+                        <div class="comparison-item">
+                            <h4>After</h4>
+                            <div class="image-container">
+                                <img id="processedImage" src="" alt="Background Replaced">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="results-actions">
+                    <button class="btn btn-primary" id="downloadBtn">Download Result</button>
+                    <button class="btn btn-outline" onclick="location.reload()">Try Different Background</button>
+                    <a href="/gallery.html" class="btn btn-outline">View Gallery</a>
+                </div>
+            </div>
+
+            <!-- Error Section -->
+            <div class="error-section" id="errorSection" style="display: none;">
+                <div class="error-card">
+                    <div class="error-icon">❌</div>
+                    <h3>Background Generation Failed</h3>
+                    <p id="errorMessage">Something went wrong. Please try again.</p>
+                    <button class="btn btn-primary" onclick="location.reload()">Try Again</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/core.js"></script>
+    <script src="/js/auth.js"></script>
+    <script>
+        window.TOOL_CONFIG = {
+            type: 'replace_bg',
+            name: 'Background Replace',
+            cost: 2,
+            endpoint: '/replace_bg',
+            requiresPrompt: true
+        };
+    </script>
+    <script src="/js/tool-prompt.js"></script>
+</body>
+</html>
