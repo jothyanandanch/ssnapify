@@ -61,16 +61,19 @@ app = FastAPI(
 
 # ------- Middlewares --------
 
-# Secure cookies; set secure=True only for production!
-is_prod = os.getenv("ENVIRONMENT", "development") == "production"
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=settings.secret_key,
-    max_age=60 * 60 * 24 * 7,  # 1 week
-    same_site="strict",
-    secure=is_prod,
-    httponly=True,
-)
+from fastapi.responses import Response
+
+def set_session_cookie(response: Response, session_data: str):
+    response.set_cookie(
+        key="session",
+        value=session_data,
+        max_age=60 * 60 * 24 * 7,  # 1 week
+        httponly=True,
+        secure=os.getenv("ENVIRONMENT") == "production",
+        samesite="strict",
+        path="/"
+    )
+
 
 app.add_middleware(
     CORSMiddleware,
