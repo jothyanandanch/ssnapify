@@ -1,6 +1,7 @@
 # config.py (add validation)
 import os
-from pydantic_settings import BaseSettings, SettingsConfigDict, ValidationError
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import ValidationError
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
