@@ -1,0 +1,1 @@
+from app.main import app  # assuming app = FastAPI() is defined in app/main.py
