@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     cloudinary_cloud_name: str
     cloudinary_api_key: str
     cloudinary_api_secret: str
-    redis_url: str = "redis://localhost:6379/0"
-    postgres_url: str
+    redis_url: str
+    database_url: str
     postgres_user: str
     postgres_password: str
     postgres_database: str
