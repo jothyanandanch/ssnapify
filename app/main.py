@@ -443,7 +443,6 @@ async def replace_background(
 ):
     """Replace background with AI-generated content"""
     return await apply_transformation(image_id, "replace_bg", current_user, db, cost=2, prompt=prompt)
-
 async def apply_transformation(
     image_id: int,
     transformation: str,
@@ -452,7 +451,7 @@ async def apply_transformation(
     cost: int,
     prompt: str = None
 ):
-    """Helper function to apply image transformations using correct effect names"""
+    """Simple, reliable transformation approach - back to basics"""
     
     # Get original image
     image = db.query(Image).filter(
@@ -469,51 +468,40 @@ async def apply_transformation(
     try:
         print(f"🎨 Applying transformation: {transformation}")
         
-        from cloudinary.utils import cloudinary_url
+        # SIMPLE APPROACH: Just build the transformation URL directly
+        base_url = image.secure_url
         
-        # Define CORRECT transformation parameters based on type
-        transform_options = {}
+        # Extract the upload part to insert transformation
+        # URL format: https://res.cloudinary.com/{cloud_name}/image/upload/v{version}/{public_id}.{format}
+        url_parts = base_url.split('/upload/')
+        if len(url_parts) != 2:
+            raise Exception("Invalid Cloudinary URL format")
+        
+        base_part = url_parts[0] + '/upload/'
+        image_part = url_parts[1]
+        
+        # Define simple transformations
+        transformation_params = ""
         
         if transformation == "restore":
-            # Use generative_restore for AI restoration, not improve
-            transform_options = {"effect": "gen_restore"}
+            transformation_params = "e_improve"
         elif transformation == "remove_bg":
-            # This one works - keep as is
-            transform_options = {"effect": "background_removal"}
+            transformation_params = "e_background_removal"
         elif transformation == "remove_obj":
-            # CORRECT: Use gen_remove, not generative_remove
-            transform_options = {"effect": "gen_remove"}
+            transformation_params = "e_gen_remove"
         elif transformation == "enhance":
-            # Use enhance effect (different from improve)
-            transform_options = {"effect": "enhance"}
+            transformation_params = "e_auto_contrast,e_auto_brightness"
         elif transformation == "generative_fill":
-            # CORRECT: Use gen_fill, not generative_fill
-            if prompt:
-                transform_options = {"effect": "gen_fill", "prompt": prompt}
-            else:
-                transform_options = {"effect": "gen_fill"}
+            transformation_params = "e_gen_fill"
         elif transformation == "replace_bg":
-            # CORRECT: Use gen_background_replace
-            if prompt:
-                transform_options = {"effect": "gen_background_replace", "prompt": prompt}
-            else:
-                transform_options = {"effect": "gen_background_replace"}
-        else:
-            raise HTTPException(status_code=400, detail="Invalid transformation type")
-
-        print(f"📋 Transformation params: {transform_options}")
+            transformation_params = "e_gen_background_replace"
         
-        # Generate the transformation URL
-        transformed_url, _ = cloudinary_url(
-            image.public_id,
-            **transform_options,
-            secure=True
-        )
+        # Build final URL
+        transformed_url = f"{base_part}{transformation_params}/{image_part}"
         
-        print(f"🔗 Generated transformation URL: {transformed_url}")
+        print(f"🔗 Simple transformation URL: {transformed_url}")
         
-        # Create new image record with the transformation URL directly
-        # No need to re-upload for most effects
+        # Create new image record - NO re-upload, just the URL
         new_image = Image(
             user_id=current_user.id,
             public_id=f"transformed_{transformation}_{image.public_id.replace('/', '_')}",
@@ -527,7 +515,7 @@ async def apply_transformation(
         db.commit()
         db.refresh(new_image)
         
-        print(f"✅ Transformation complete: {transformed_url}")
+        print(f"✅ Simple transformation complete: {transformed_url}")
         return new_image
 
     except Exception as e:
