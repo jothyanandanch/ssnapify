@@ -27,3 +27,17 @@ itsdangerous
 pydantic_settings
 APScheduler>=3.10,<4.0
 redis python-decouple
+
+
+fastapi
+uvicorn[standard]
+python-multipart
+sqlalchemy
+cloudinary
+pydantic-settings
+redis
+authlib
+requests
+passlib[bcrypt]
+python-jose[cryptography]
+itsdangerous
