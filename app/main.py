@@ -6,7 +6,6 @@ from fastapi.routing import APIRouter
 from contextlib import asynccontextmanager
 from sqlalchemy.orm import Session
 from datetime import datetime, timezone
-import traceback
 import os
 import logging
 from typing import Optional, List
@@ -58,6 +57,14 @@ app = FastAPI(
     description="AI-powered image enhancement and transformation service",
     version="1.0.0",
     lifespan=lifespan
+)
+
+from starlette.middleware.sessions import SessionMiddleware
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=settings.secret_key,  # Use a secure, random key
+    max_age=60 * 60 * 24 * 7         # Optional: 1 week session duration
 )
 
 # ------- Middlewares --------
@@ -140,20 +147,8 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
         redirect_url = f"/static/login.html?token={access_token}"
         return RedirectResponse(url=redirect_url)
     except Exception as e:
-        #except Exception as e:
-        #logger.error(f"Google callback error: {e}")
-        #return RedirectResponse(url="/static/login.html?error=auth_failed")
-
         logger.error(f"Google callback error: {e}")
-        logger.error(traceback.format_exc())
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": "Internal server error",
-                "detail": str(e),
-                "traceback": traceback.format_exc(),
-            },
-        )
+        return RedirectResponse(url="/static/login.html?error=auth_failed")
 
 @auth_router.post("/logout")
 def logout(current_user: User = Depends(get_current_user), token: str = Depends(oauth2_scheme)):

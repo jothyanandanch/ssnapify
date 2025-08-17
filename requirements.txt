@@ -35,4 +35,3 @@ python-multipart
 authlib
 requests
 itsdangerous
-traceback
