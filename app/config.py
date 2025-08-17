@@ -5,6 +5,11 @@ from pydantic import ValidationError
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    @property
+    def patched_database_url(self):
+        if self.database_url.startswith("postgres://"):
+            return self.database_url.replace("postgres://", "postgresql://", 1)
+        return self.database_url
     secret_key: str
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
@@ -23,11 +28,16 @@ class Settings(BaseSettings):
     def validate(self):
         required_vars = [
             'secret_key', 'google_client_id', 'google_client_secret',
-            'cloudinary_cloud_name', 'cloudinary_api_key', 'cloudinary_api_secret', 'postgres_url'
+            'cloudinary_cloud_name', 'cloudinary_api_key', 'cloudinary_api_secret', 'database_url'
         ]
         for var in required_vars:
             if not getattr(self, var, None):
-                raise ValidationError("Missing required config: " + var)
+                raise ValueError(f"Missing required config: {var}")
 
 settings = Settings()
-settings.validate()
+try:
+    settings = Settings()
+    settings.validate()
+except ValidationError as ve:
+    print("Config validation failed:", ve)
+    raise
