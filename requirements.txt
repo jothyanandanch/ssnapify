@@ -30,7 +30,7 @@ redis
 python-decouple
 
 
-
+alembic
 python-multipart
 authlib
 requests

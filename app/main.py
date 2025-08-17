@@ -29,7 +29,7 @@ from app.billing.timeutils import now_utc
 from app.models.schemas import UserOut, ImageOut
 from app.config import settings
 import cloudinary.uploader
-
+import app.models
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ssnapify")
