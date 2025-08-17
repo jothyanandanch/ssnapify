@@ -29,7 +29,7 @@ from app.billing.timeutils import now_utc
 from app.models.schemas import UserOut, ImageOut
 from app.config import settings
 import cloudinary.uploader
-import app.models
+models.Base.metadata.create_all(bind=engine)
 # Setup Logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ssnapify")
@@ -38,6 +38,7 @@ logger = logging.getLogger("ssnapify")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("🚀 SSnapify starting up...")
+    from app import models
     models.Base.metadata.create_all(bind=engine)
     logger.info("✅ Database tables created")
     if redis_service.ping():
