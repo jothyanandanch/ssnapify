@@ -38,6 +38,13 @@ class RedisService:
             return False
         except:
             return False
+        
+    @property
+    def available(self):
+        try:
+            return self.ping()
+        except Exception:
+            return False
     
     def blacklist_token(self, token: str, expires_in_minutes: int = None) -> bool:
         """Add token to blacklist with expiration"""
