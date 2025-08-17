@@ -4,10 +4,19 @@
     {
       "src": "app/main.py",
       "use": "@vercel/python",
-      "config": { "maxLambdaSize": "50mb" }
+      "config": {
+        "maxLambdaSize": "50mb"
+      }
     }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "app/main.py" }
-  ]
+    {
+      "src": "/(.*)",
+      "dest": "app/main.py"
+    }
+  ],
+  "env": {
+    "PYTHON_VERSION": "3.11"
+  },
+  "installCommand": "pip3 install -r requirements.txt"
 }
